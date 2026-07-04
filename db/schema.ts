@@ -8,6 +8,9 @@ export * from "./plans-schema";
 export * from "./auth-schema";
 export * from "./event-schema";
 export * from "./media-schema";
+export * from "./trip-schema";
+export * from "./billing-schema";
+export * from "./invite-schema";
 
 // References to files uploaded to S3 (see app/api/uploads). `userId` is
 // nullable so uploads work for anonymous visitors too; when a Better Auth
