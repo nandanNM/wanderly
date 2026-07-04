@@ -1,86 +1,68 @@
-// Bespoke marketing landing page (clean, modern travel style — intentionally
-// NOT sketchbook-ui; see the note in CLAUDE.md). Pure presentational Server
-// Component. Brand name "Wanderly" is a placeholder — rename freely.
+"use client";
+
+import { useState } from "react";
+import {
+  Accordion,
+  AccordionItem,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  Dropdown,
+  Input,
+  Modal,
+  Progress,
+  RadioGroup,
+  Select,
+  Skeleton,
+  SkeletonCard,
+  SkeletonText,
+  Slider,
+  Spinner,
+  Switch,
+  Textarea,
+  Tooltip,
+  ToastContainer,
+  useToast,
+} from "sketchbook-ui";
 import { HeroIllustration } from "./hero-illustration";
 
-const navLinks = ["Home", "About us", "Reviews", "Blogs", "Routes"];
-
-const popularPlaces = [
-  {
-    name: "New York City",
-    tag: "U.S City",
-    emoji: "🗽",
-    from: "#dceffb",
-    to: "#b9def0",
-  },
-  {
-    name: "Saint Martin",
-    tag: "Bangladesh",
-    emoji: "⛵",
-    from: "#cdeaf2",
-    to: "#9fd2e0",
-  },
-];
+const paper = { bg: "#faf7f0", stroke: "#2a2a2a", text: "#2a2a2a" };
 
 const features = [
   {
+    variant: "paper" as const,
     icon: "🗺️",
     title: "Plan every trip",
-    body: "Create a trip, add your route and destinations, and keep everything in one shareable place.",
+    body: "Create a trip, add your route, and keep everything in one shareable place.",
   },
   {
+    variant: "notebook" as const,
     icon: "📸",
     title: "Collect the memories",
-    body: "Everyone drops their photos and videos straight into the trip — uploaded securely to your own storage.",
+    body: "Everyone drops their photos and videos straight into the trip.",
   },
   {
+    variant: "sticky" as const,
     icon: "🔒",
     title: "You control access",
-    body: "Keep a trip public or invite-only, approve members, and restrict specific media to specific people.",
-  },
-  {
-    icon: "⬇️",
-    title: "Download & keep",
-    body: "Grab full-resolution originals of everything shared on the trip on paid plans.",
+    body: "Public or invite-only, with per-photo permissions when you need them.",
   },
 ];
 
 const destinations = [
-  {
-    name: "Santorini",
-    country: "Greece",
-    emoji: "🏛️",
-    from: "#f7d9c4",
-    to: "#f0b28a",
-  },
-  {
-    name: "Kyoto",
-    country: "Japan",
-    emoji: "⛩️",
-    from: "#f6c9d0",
-    to: "#e79aa8",
-  },
-  {
-    name: "Bali",
-    country: "Indonesia",
-    emoji: "🏝️",
-    from: "#cdeccd",
-    to: "#95d29a",
-  },
-  {
-    name: "Reykjavík",
-    country: "Iceland",
-    emoji: "🏔️",
-    from: "#d7e3f6",
-    to: "#a7c1ea",
-  },
+  { name: "Santorini", country: "Greece", emoji: "🏛️" },
+  { name: "Kyoto", country: "Japan", emoji: "⛩️" },
+  { name: "Bali", country: "Indonesia", emoji: "🏝️" },
 ];
 
 const plans = [
   {
     name: "Free",
     price: "$0",
-    blurb: "For your first trips.",
+    storage: 20,
     perks: ["3 trips", "25 travelers / trip", "2 GB per trip", "Photo sharing"],
     cta: "Start free",
     featured: false,
@@ -88,13 +70,12 @@ const plans = [
   {
     name: "Pro",
     price: "$19",
-    blurb: "For frequent travelers.",
+    storage: 65,
     perks: [
       "50 trips",
       "500 travelers / trip",
       "50 GB per trip",
-      "Photo, video, audio & docs",
-      "Downloads enabled",
+      "All media + downloads",
     ],
     cta: "Go Pro",
     featured: true,
@@ -102,12 +83,11 @@ const plans = [
   {
     name: "Business",
     price: "$99",
-    blurb: "For tour operators & teams.",
+    storage: 90,
     perks: [
       "Unlimited trips",
-      "10,000 travelers / trip",
+      "10,000 travelers",
       "500 GB per trip",
-      "All media types",
       "Priority support",
     ],
     cta: "Contact sales",
@@ -125,340 +105,461 @@ const reviews = [
   },
   {
     quote:
-      "We ran a 40-person group trip and every photo landed in one place. Nobody lost a single memory.",
+      "We ran a 40-person group trip and every photo landed in one place. Magic.",
     name: "Amara Osei",
     role: "Group traveler",
     initials: "AO",
   },
   {
     quote:
-      "Private trips with per-photo access were exactly what our honeymoon needed. Beautifully simple.",
+      "Private trips with per-photo access were exactly what our honeymoon needed.",
     name: "Léa Martin",
     role: "Newlywed",
     initials: "LM",
   },
 ];
 
+const faqs = [
+  {
+    q: "Is it really free to start?",
+    a: "Yes — the Free plan gives you 3 trips with 2 GB each, no card required.",
+  },
+  {
+    q: "Where are my files stored?",
+    a: "Directly in your S3 bucket via presigned uploads — files never pass through our servers.",
+  },
+  {
+    q: "Can I keep a trip private?",
+    a: "Absolutely. Private trips are members-only, and media can be restricted to specific people.",
+  },
+  {
+    q: "Can I upload videos?",
+    a: "Video, audio and documents are available on Pro and Business. Free supports photos.",
+  },
+];
+
 export function Landing() {
+  const { toasts, showToast, dismissToast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // "Plan your trip" form state
+  const [destination, setDestination] = useState("");
+  const [tripType, setTripType] = useState("adventure");
+  const [visibility, setVisibility] = useState("private");
+  const [groupSize, setGroupSize] = useState(4);
+  const [allowDownloads, setAllowDownloads] = useState(true);
+  const [notes, setNotes] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [email, setEmail] = useState("");
+
+  function createTrip() {
+    if (!destination.trim()) {
+      showToast("Add a destination first ✎", "warning");
+      return;
+    }
+    if (!agreed) {
+      showToast("Please accept the terms to continue", "error");
+      return;
+    }
+    showToast(`Trip to ${destination} created! 🎉`, "success");
+  }
+
   return (
-    <div className="min-h-full bg-[#f4f1ea] font-sans text-[#141414]">
-      <div className="mx-auto w-full max-w-6xl px-6">
-        {/* ---------- Nav ---------- */}
-        <header className="flex items-center justify-between py-6">
-          <span className="text-2xl font-extrabold tracking-tight">
-            WANDER<span className="text-[#e0552b]">LY</span>
-          </span>
-          <nav className="hidden items-center gap-8 md:flex">
-            {navLinks.map((l) => (
-              <a
-                key={l}
-                href="#"
-                className="text-sm font-medium text-[#3a3a3a] transition-colors hover:text-[#e0552b]"
-              >
-                {l}
-              </a>
-            ))}
-          </nav>
-          <a
-            href="/upload"
-            className="rounded-xl bg-[#e0552b] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
-          >
-            Contact
-          </a>
-        </header>
-        <div className="h-px w-full bg-[#141414]/10" />
-
-        {/* ---------- Hero ---------- */}
-        <section className="grid items-center gap-8 py-12 md:grid-cols-2 md:py-16">
-          <div>
-            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-              SEE THE WORLD,
-              <br />
-              LIVE THE STORY.
-            </h1>
-            <div className="mt-8 flex gap-4 border-l-4 border-[#e0552b] pl-4">
-              <p className="max-w-md text-[#5a5a5a]">
-                Plan the trip, invite your people, and gather every photo and
-                video from the journey into one place you actually own.
-              </p>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="/upload"
-                className="rounded-xl bg-[#e0552b] px-7 py-3 font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
-              >
-                Get Started
-              </a>
-              <a
-                href="#pricing"
-                className="rounded-xl border border-[#141414]/15 bg-white px-7 py-3 font-semibold text-[#141414] transition-colors hover:border-[#e0552b] hover:text-[#e0552b]"
-              >
-                See pricing
-              </a>
-            </div>
-
-            {/* Popular places */}
-            <div className="mt-12">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#141414] text-white">
-                  ☰
-                </span>
-                <h2 className="text-xl font-bold">Popular Places</h2>
-              </div>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                {popularPlaces.map((p) => (
-                  <div
-                    key={p.name}
-                    className="flex flex-1 items-center gap-4 rounded-2xl bg-white p-3 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.3)]"
-                  >
-                    <div className="flex-1 pl-2">
-                      <p className="font-bold leading-tight">{p.name}</p>
-                      <p className="text-sm text-[#e0552b]">◍ {p.tag}</p>
-                      <span className="mt-2 inline-block rounded-lg border border-[#141414]/10 px-3 py-1 text-xs font-semibold">
-                        Book Now
-                      </span>
-                    </div>
-                    <div
-                      className="grid h-20 w-24 place-items-center rounded-xl text-3xl"
-                      style={{
-                        backgroundImage: `linear-gradient(135deg, ${p.from}, ${p.to})`,
-                      }}
-                    >
-                      {p.emoji}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Illustration + testimonial */}
-          <div className="relative">
-            <div className="ml-auto max-w-xs rounded-2xl bg-white p-4 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.3)]">
-              <p className="text-sm text-[#4a4a4a]">
-                “Wanderly, where exceptional service never stops, and your
-                journey always comes first.”
-              </p>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#e0552b] text-sm font-bold text-white">
-                  HH
-                </span>
-                <div>
-                  <p className="text-sm font-bold leading-none">H.R Harry</p>
-                  <p className="text-xs text-[#7a7a7a]">Manager</p>
-                </div>
-              </div>
-            </div>
-
-            {/*
-              Hero art: swap the <HeroIllustration /> below for your own image:
-              import Image from "next/image";
-              <Image src="/hero.png" alt="Traveler" width={520} height={520} priority />
-              (drop the file in /public first).
-            */}
-            <HeroIllustration className="mx-auto mt-4 w-full max-w-md" />
-          </div>
-        </section>
-
-        {/* ---------- Features ---------- */}
-        <section className="py-16">
-          <p className="text-center text-sm font-semibold uppercase tracking-widest text-[#e0552b]">
-            Why Wanderly
-          </p>
-          <h2 className="mx-auto mt-2 max-w-2xl text-center text-4xl font-extrabold tracking-tight">
-            Everything you need for the journey
-          </h2>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl bg-white p-6 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]"
-              >
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#fbe6dc] text-2xl">
-                  {f.icon}
-                </div>
-                <h3 className="mt-4 text-lg font-bold">{f.title}</h3>
-                <p className="mt-2 text-sm text-[#5a5a5a]">{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------- Destinations ---------- */}
-        <section className="py-16">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-[#e0552b]">
-                Trending
-              </p>
-              <h2 className="mt-2 text-4xl font-extrabold tracking-tight">
-                Popular destinations
-              </h2>
-            </div>
-            <a
-              href="#"
-              className="hidden text-sm font-semibold text-[#e0552b] hover:underline sm:block"
-            >
-              View all routes →
+    <div className="min-h-full">
+      {/* ---------- Nav ---------- */}
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+        <div className="flex items-center gap-3">
+          <span className="font-hand text-3xl font-bold">✎ Wanderly</span>
+          <Badge variant="warning" size="sm">
+            Beta
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <Dropdown
+            triggerText="Menu"
+            triggerIcon="menu"
+            items={[
+              { label: "Routes", icon: "share" },
+              { label: "Reviews", icon: "edit" },
+              { label: "Blogs", icon: "duplicate" },
+              { label: "Settings", icon: "settings" },
+            ]}
+          />
+          <Tooltip content="Star us on GitHub!">
+            <a href="https://github.com" target="_blank" rel="noreferrer">
+              <Button size="sm" colors={paper}>
+                GitHub
+              </Button>
             </a>
-          </div>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {destinations.map((d) => (
-              <div
-                key={d.name}
-                className="overflow-hidden rounded-2xl bg-white shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]"
-              >
-                {/* Destination image slot — replace the gradient with <Image />. */}
-                <div
-                  className="grid h-40 place-items-center text-5xl"
-                  style={{
-                    backgroundImage: `linear-gradient(135deg, ${d.from}, ${d.to})`,
-                  }}
-                >
-                  {d.emoji}
-                </div>
-                <div className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-bold leading-tight">{d.name}</p>
-                    <p className="text-sm text-[#7a7a7a]">◍ {d.country}</p>
-                  </div>
-                  <span className="rounded-lg bg-[#e0552b] px-3 py-1.5 text-xs font-semibold text-white">
-                    Explore
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------- Pricing ---------- */}
-        <section id="pricing" className="py-16">
-          <p className="text-center text-sm font-semibold uppercase tracking-widest text-[#e0552b]">
-            Pricing
-          </p>
-          <h2 className="mx-auto mt-2 max-w-2xl text-center text-4xl font-extrabold tracking-tight">
-            Simple plans for every traveler
-          </h2>
-          <div className="mt-10 grid items-start gap-6 md:grid-cols-3">
-            {plans.map((p) => (
-              <div
-                key={p.name}
-                className={`rounded-3xl p-8 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.5)] ${
-                  p.featured
-                    ? "bg-[#141414] text-white md:-translate-y-3"
-                    : "bg-white text-[#141414]"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">{p.name}</h3>
-                  {p.featured && (
-                    <span className="rounded-full bg-[#e0552b] px-3 py-1 text-xs font-semibold text-white">
-                      Most popular
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`mt-1 text-sm ${p.featured ? "text-white/60" : "text-[#7a7a7a]"}`}
-                >
-                  {p.blurb}
-                </p>
-                <p className="mt-5 text-4xl font-extrabold">
-                  {p.price}
-                  <span
-                    className={`text-base font-medium ${p.featured ? "text-white/60" : "text-[#7a7a7a]"}`}
-                  >
-                    {" "}
-                    /mo
-                  </span>
-                </p>
-                <ul className="mt-6 flex flex-col gap-3 text-sm">
-                  {p.perks.map((perk) => (
-                    <li key={perk} className="flex items-center gap-2">
-                      <span className="text-[#e0552b]">✓</span>
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href="/upload"
-                  className={`mt-8 block rounded-xl px-6 py-3 text-center font-semibold transition-transform hover:-translate-y-0.5 ${
-                    p.featured
-                      ? "bg-[#e0552b] text-white"
-                      : "border border-[#141414]/15 text-[#141414] hover:border-[#e0552b] hover:text-[#e0552b]"
-                  }`}
-                >
-                  {p.cta}
-                </a>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------- Testimonials ---------- */}
-        <section className="py-16">
-          <h2 className="text-center text-4xl font-extrabold tracking-tight">
-            Loved by travelers
-          </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {reviews.map((r) => (
-              <div
-                key={r.name}
-                className="rounded-2xl bg-white p-6 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]"
-              >
-                <p className="text-[#4a4a4a]">“{r.quote}”</p>
-                <div className="mt-5 flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[#fbe6dc] text-sm font-bold text-[#e0552b]">
-                    {r.initials}
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold leading-none">{r.name}</p>
-                    <p className="text-xs text-[#7a7a7a]">{r.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      {/* ---------- CTA + Footer ---------- */}
-      <section className="mx-auto mt-8 w-full max-w-6xl px-6">
-        <div className="rounded-3xl bg-[#e0552b] px-8 py-14 text-center text-white">
-          <h2 className="text-4xl font-extrabold tracking-tight">
-            Ready to start your story?
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-white/80">
-            Create your first trip in minutes. No card required on the free
-            plan.
-          </p>
-          <a
-            href="/upload"
-            className="mt-7 inline-block rounded-xl bg-white px-8 py-3 font-semibold text-[#e0552b] transition-transform hover:-translate-y-0.5"
-          >
-            Get Started
+          </Tooltip>
+          <a href="/upload">
+            <Button size="sm">Sign in</Button>
           </a>
+          <Avatar initials="ME" size="sm" />
+        </div>
+      </header>
+
+      <Divider variant="scribble" />
+
+      {/* ---------- Hero ---------- */}
+      <section className="mx-auto grid w-full max-w-6xl items-center gap-8 px-6 py-16 md:grid-cols-2">
+        <div className="flex flex-col items-start gap-6">
+          <Badge variant="success">New — group trips</Badge>
+          <h1 className="font-hand text-6xl font-bold leading-[1.02] sm:text-7xl">
+            See the world,
+            <br />
+            live the story.
+          </h1>
+          <p className="max-w-md text-lg text-[#5a5a5a]">
+            Plan the trip, invite your people, and gather every photo and video
+            from the journey into one place you actually own.
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <a href="/upload">
+              <Button size="lg">Get Started</Button>
+            </a>
+            <Button size="lg" colors={paper} onClick={() => setModalOpen(true)}>
+              Plan a trip
+            </Button>
+          </div>
+        </div>
+        <div className="relative">
+          {/*
+            Hero art: swap <HeroIllustration /> for your own image:
+            import Image from "next/image";
+            <Image src="/hero.png" alt="Traveler" width={520} height={520} priority />
+          */}
+          <HeroIllustration className="mx-auto w-full max-w-md" />
         </div>
       </section>
 
-      <footer className="mt-12 bg-[#1b1a27] text-[#c9c7d1]">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 sm:flex-row">
-          <span className="text-xl font-extrabold text-white">
-            WANDER<span className="text-[#e0552b]">LY</span>
-          </span>
-          <p className="text-sm">
-            © {new Date().getFullYear()} Wanderly. See the world, live the
-            story.
+      {/* ---------- Stats (Progress) ---------- */}
+      <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3">
+        <Card variant="paper">
+          <Progress
+            value={82}
+            label="Trips shared"
+            variant="hatching"
+            showPercentage
+          />
+        </Card>
+        <Card variant="paper">
+          <Progress
+            value={64}
+            label="Photos synced"
+            variant="scribble"
+            showPercentage
+          />
+        </Card>
+        <Card variant="paper">
+          <Progress
+            value={95}
+            label="Happy travelers"
+            variant="dots"
+            showPercentage
+          />
+        </Card>
+      </section>
+
+      {/* ---------- Features ---------- */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-12">
+        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+          Everything you need for the journey
+        </h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {features.map((f) => (
+            <Card key={f.title} variant={f.variant}>
+              <div className="text-3xl">{f.icon}</div>
+              <h3 className="font-hand mt-2 text-3xl font-bold">{f.title}</h3>
+              <p className="mt-1 text-[#5a5a5a]">{f.body}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Plan your trip (form controls) ---------- */}
+      <section className="mx-auto w-full max-w-3xl px-6 py-12">
+        <h2 className="font-hand mb-6 text-center text-5xl font-bold">
+          Plan your trip
+        </h2>
+        <Card variant="notebook">
+          <div className="flex flex-col gap-5">
+            <Input
+              label="Destination"
+              placeholder="Where to?"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+            />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <p className="font-hand mb-1 text-xl">Trip type</p>
+                <Select
+                  defaultValue={tripType}
+                  onChange={setTripType}
+                  options={[
+                    { value: "adventure", label: "Adventure" },
+                    { value: "beach", label: "Beach" },
+                    { value: "city", label: "City break" },
+                    { value: "roadtrip", label: "Road trip" },
+                  ]}
+                />
+              </div>
+              <div>
+                <p className="font-hand mb-1 text-xl">Who can see it?</p>
+                <RadioGroup
+                  name="visibility"
+                  value={visibility}
+                  onChange={setVisibility}
+                  options={[
+                    { value: "private", label: "Private" },
+                    { value: "public", label: "Public" },
+                  ]}
+                />
+              </div>
+            </div>
+            <Slider
+              label="Group size"
+              min={1}
+              max={50}
+              value={groupSize}
+              onChange={setGroupSize}
+            />
+            <Switch
+              label="Allow downloads"
+              showLabel
+              checked={allowDownloads}
+              onChange={(e) => setAllowDownloads(e.target.checked)}
+            />
+            <Textarea
+              label="Trip notes"
+              placeholder="Anything your travelers should know..."
+              showLines
+              showMargin
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <Checkbox
+              label="I agree to the terms & privacy policy"
+              checked={agreed}
+              onChange={setAgreed}
+            />
+            <div>
+              <Button onClick={createTrip}>Create trip</Button>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      {/* ---------- Live gallery preview (Skeleton + Spinner) ---------- */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="mb-6 flex items-center justify-center gap-3">
+          <Spinner variant="spiral" size="sm" />
+          <h2 className="font-hand text-4xl font-bold">
+            Your gallery, syncing live
+          </h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <SkeletonCard showAvatar />
+          <Card variant="paper">
+            <Skeleton variant="rectangle" height={120} />
+            <div className="mt-3">
+              <SkeletonText lines={3} />
+            </div>
+          </Card>
+          <SkeletonCard showAvatar />
+        </div>
+      </section>
+
+      {/* ---------- Destinations ---------- */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-12">
+        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+          Popular destinations
+        </h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {destinations.map((d) => (
+            <Card key={d.name} variant="paper">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-4xl">{d.emoji}</div>
+                  <h3 className="font-hand mt-2 text-3xl font-bold">
+                    {d.name}
+                  </h3>
+                </div>
+                <Badge variant="info">{d.country}</Badge>
+              </div>
+              <Divider variant="dashed" />
+              <a href="/upload">
+                <Button size="sm" colors={paper}>
+                  Explore
+                </Button>
+              </a>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Pricing ---------- */}
+      <section id="pricing" className="mx-auto w-full max-w-6xl px-6 py-12">
+        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+          Simple, honest pricing
+        </h2>
+        <div className="grid items-start gap-6 md:grid-cols-3">
+          {plans.map((p) => (
+            <Card
+              key={p.name}
+              variant={p.featured ? "notebook" : "paper"}
+              className={p.featured ? "md:-translate-y-2" : ""}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-hand text-4xl font-bold">{p.name}</h3>
+                <Badge variant={p.featured ? "success" : "default"}>
+                  {p.featured ? "Popular" : p.name}
+                </Badge>
+              </div>
+              <p className="font-hand mt-1 text-5xl font-bold">
+                {p.price}
+                <span className="text-xl text-[#7a7a7a]"> /mo</span>
+              </p>
+              <Divider variant="dashed" />
+              <ul className="mb-4 mt-2 flex flex-col gap-2 text-[#5a5a5a]">
+                {p.perks.map((perk) => (
+                  <li key={perk}>✏️ {perk}</li>
+                ))}
+              </ul>
+              <div className="mb-4">
+                <Progress
+                  value={p.storage}
+                  label="Storage"
+                  variant="solid"
+                  size="sm"
+                />
+              </div>
+              <a href="/upload">
+                <Button colors={p.featured ? undefined : paper}>{p.cta}</Button>
+              </a>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- Testimonials ---------- */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-12">
+        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+          Loved by travelers
+        </h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {reviews.map((r) => (
+            <Card key={r.name} variant="sticky">
+              <p className="text-[#4a4a4a]">“{r.quote}”</p>
+              <Divider variant="dots" />
+              <div className="flex items-center gap-3">
+                <Avatar initials={r.initials} size="sm" />
+                <div>
+                  <p className="font-hand text-xl leading-none">{r.name}</p>
+                  <p className="text-sm text-[#7a7a7a]">{r.role}</p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- FAQ ---------- */}
+      <section className="mx-auto w-full max-w-3xl px-6 py-12">
+        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+          Questions & answers
+        </h2>
+        <Accordion>
+          {faqs.map((f, i) => (
+            <AccordionItem key={f.q} title={f.q} number={i + 1}>
+              {f.a}
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* ---------- Newsletter / CTA ---------- */}
+      <section className="mx-auto w-full max-w-3xl px-6 py-12">
+        <Card variant="sticky">
+          <h2 className="font-hand text-4xl font-bold">Stay in the loop</h2>
+          <p className="mb-4 text-[#5a5a5a]">
+            Get notified when new features ship. No spam, ever.
           </p>
-          <div className="flex gap-4 text-sm">
-            <a href="#" className="hover:text-white">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-white">
-              Terms
-            </a>
+          <div className="flex flex-col items-end gap-3 sm:flex-row">
+            <div className="w-full">
+              <Input
+                label="Email"
+                placeholder="you@example.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <Button
+              onClick={() =>
+                showToast(
+                  email ? "You're on the list! ✎" : "Enter an email first",
+                  email ? "success" : "warning",
+                )
+              }
+            >
+              Notify me
+            </Button>
+          </div>
+        </Card>
+      </section>
+
+      {/* ---------- Footer ---------- */}
+      <footer className="mx-auto w-full max-w-6xl px-6 py-10">
+        <Divider variant="zigzag" />
+        <div className="mt-6 flex flex-col items-center justify-between gap-4 text-[#7a7a7a] sm:flex-row">
+          <span className="font-hand text-2xl">✎ Wanderly</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm">Built with Sketchbook UI</span>
+            <Avatar initials="W" size="sm" />
           </div>
         </div>
       </footer>
+
+      {/* ---------- Modal ---------- */}
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Plan a trip"
+        variant="paper"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              size="sm"
+              colors={paper}
+              onClick={() => setModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setModalOpen(false);
+                showToast("Let's plan your trip! 🧳", "info");
+              }}
+            >
+              Let&apos;s go
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-[#4a4a4a]">
+          Create a trip, invite your travelers, and start collecting memories in
+          seconds. It only takes a minute to set up.
+        </p>
+      </Modal>
+
+      {/* Toasts */}
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={dismissToast}
+        position="bottom-right"
+      />
     </div>
   );
 }

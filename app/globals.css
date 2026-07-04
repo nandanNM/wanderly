@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
+/* Sketchbook UI paper theme — the app's default look.
+   (The Caveat font is loaded by sketchbook-ui/style.css, imported in layout.) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf7f0;
+  --foreground: #2a2a2a;
+  --sketch-bg-overlay: #f5f1e8;
+  --sketch-stroke: #2a2a2a;
 }
 
 @theme inline {
@@ -12,20 +16,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Hand-drawn font (Caveat is loaded by sketchbook-ui's stylesheet). */
+/* Hand-drawn font (Caveat) for headings, to match Sketchbook UI. */
 .font-hand {
   font-family: "Caveat", cursive;
 }
