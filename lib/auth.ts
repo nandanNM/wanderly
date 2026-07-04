@@ -7,6 +7,15 @@ import { db } from "@/db";
 import * as schema from "@/db/auth-schema";
 import { plans } from "@/db/plans-schema";
 
+// Only register Google when its credentials exist, so a missing env var can't
+// break auth init. Set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET to enable it.
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const socialProviders =
+  googleClientId && googleClientSecret
+    ? { google: { clientId: googleClientId, clientSecret: googleClientSecret } }
+    : undefined;
+
 // BETTER_AUTH_SECRET and BETTER_AUTH_URL are read from the environment.
 // Only set `secret` / `baseURL` here if those env vars are not defined.
 export const auth = betterAuth({
@@ -53,11 +62,5 @@ export const auth = betterAuth({
       },
     },
   },
-  // Add social providers here, e.g.:
-  // socialProviders: {
-  //   google: {
-  //     clientId: process.env.GOOGLE_CLIENT_ID!,
-  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  //   },
-  // },
+  socialProviders,
 });

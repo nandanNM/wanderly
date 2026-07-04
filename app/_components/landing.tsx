@@ -285,7 +285,7 @@ export function Landing() {
             from the journey into one place you actually own.
           </p>
           <div className="flex flex-wrap gap-3 sm:gap-4">
-            <a href="/upload">
+            <a href="/sign-in">
               <Button size="lg">Get Started</Button>
             </a>
             <Button size="lg" onClick={() => setModalOpen(true)}>
