@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SignInCard } from "./sign-in-card";
+import { SignInCard } from "@/components/auth/sign-in-card";
 
 export const metadata: Metadata = {
   title: "Sign in · Wanderly",

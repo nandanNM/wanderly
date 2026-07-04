@@ -6,7 +6,7 @@ Guidance for working in this repository.
 
 Next.js 16 (App Router) event-sharing platform. TypeScript, Tailwind v4, pnpm.
 
-- **Auth:** Better Auth (email/password) — `lib/auth.ts`, client in `lib/auth-client.ts`, route at `app/api/auth/[...all]/route.ts`.
+- **Auth:** Better Auth (email/password + Google OAuth, **admin plugin** for roles) — `lib/auth.ts`, client in `lib/auth-client.ts`, route at `app/api/auth/[...all]/route.ts`.
 - **DB:** PostgreSQL (Neon) via Drizzle ORM (node-postgres). Schema in `db/`, migrations in `drizzle/`.
 - **Storage:** S3 uploads via presigned URLs — `lib/s3.ts`, `app/api/presigned`, `app/api/uploads`.
 - **Domain:** plans → users → events → event_members / media / media_access. Business rules (owner auto-add, storage sync, plan quotas, member caps) live in the `drizzle/*_event_rules` SQL migration; the schema ERD is `schema_erd.mermaid`.
@@ -16,11 +16,21 @@ Next.js 16 (App Router) event-sharing platform. TypeScript, Tailwind v4, pnpm.
 **Build all UI with [`sketchbook-ui`](https://sarthakrawat-1.github.io/sketchbook-ui/) by default.** Reach for a plain HTML element or a custom-styled component only when no Sketchbook component fits — and say so.
 
 - **Import components from `sketchbook-ui`**, e.g. `import { Button, Card, Input, Badge } from "sketchbook-ui"`. Prefer these over hand-rolled buttons/inputs/cards/etc.
-- **Client-only:** the library ships without `"use client"` directives but uses hooks, so its components render only inside a `"use client"` component/file. Server Components must delegate to a client child (see `app/page.tsx` → `app/_components/landing.tsx`).
+- **Client-only:** the library ships without `"use client"` directives but uses hooks, so its components render only inside a `"use client"` component/file. Server Components must delegate to a client child (see `app/page.tsx` → `components/landing/landing.tsx`).
 - **Already wired:** the stylesheet is imported once in `app/layout.tsx` (`import "sketchbook-ui/style.css"`) and `SketchProvider` wraps the app via `app/providers.tsx`. Don't re-import the CSS or re-mount the provider.
 - **Theme:** the look is the default Caveat/paper theme (`bg #faf7f0`, `stroke/text #2a2a2a`). Every component takes `colors` and `typography` props for overrides. Use the `.font-hand` class (Caveat) for hand-drawn headings.
 - **Available components:** Button, Input, Textarea, Checkbox, Switch, Select, RadioGroup, Slider, Badge, Avatar, Card (`paper`/`notebook`/`sticky`), Divider (`scribble`/`dashed`/`dots`/`zigzag`), Progress, Skeleton, Spinner, Tooltip, Toast (`useToast`), Modal, Dropdown, Accordion.
-- **The landing page** (`app/_components/landing.tsx`) is built entirely with sketchbook-ui and showcases the full component set; use it as a usage reference. Global CSS (`app/globals.css`) uses the paper theme (`bg #faf7f0`, `text #2a2a2a`).
+- **The landing page** (`components/landing/landing.tsx`) is built entirely with sketchbook-ui and showcases the full component set; use it as a usage reference. Global CSS (`app/globals.css`) uses the paper theme (`bg #faf7f0`, `text #2a2a2a`).
+
+## 📁 Components & reuse
+
+Shared components live under `components/` (never `app/_components`). When you build something used in more than one place, extract it here rather than duplicating.
+
+- `components/ui/` — small reusable primitives: `logo.tsx` (`<Logo>` wordmark), `google-icon.tsx`, `client-only.tsx` (hydration guard for non-deterministic sketch SVGs), `card-fan-carousel.tsx`.
+- `components/` — larger reusable widgets: `globe-polaroids.tsx` (cobe globe).
+- `components/landing/` — the marketing landing (`landing.tsx`); `components/auth/` — auth UI (`sign-in-card.tsx`).
+- `lib/site-content.ts` — landing **copy/data** (features, plans, reviews, faqs, destinations, gallery) + theme tokens (`greenBadge`, `blueBadge`, `HL_*`, `hl()`). Edit content here, not inline in components.
+- Route files in `app/**/page.tsx` stay thin — a Server Component that renders a component from `components/` (and may export `metadata`).
 
 ## 🔒 Data Access Layer (DAL) — the rule
 
@@ -75,7 +85,7 @@ Prettier + ESLint run on staged files via a Husky `pre-commit` hook (lint-staged
 ## Schema & migrations
 
 - Table definitions live in `db/`: `enums.ts`, `plans-schema.ts`, `auth-schema.ts` (Better Auth + extended `user`), `event-schema.ts`, `media-schema.ts`; all re-exported from `db/schema.ts`.
-- `user` is the single source of truth for people (app fields `username`, `display_name`, `is_active`, `plan_id` live on it). Domain tables FK to `user.id` (text).
+- `user` is the single source of truth for people. App fields `username`, `display_name`, `is_active`, `plan_id` live on it; the Better Auth admin plugin adds `role` (default `"user"`), `banned`, `ban_reason`, `ban_expires` (and `impersonated_by` on `session`). Domain tables FK to `user.id` (text).
 - Change the schema → `pnpm db:generate`. Triggers/functions/views that Drizzle can't express go in a **custom** migration (`pnpm exec drizzle-kit generate --custom --name ...`). After changing Better Auth config/plugins, regenerate `db/auth-schema.ts` with `pnpm dlx @better-auth/cli generate`.
 - Do not commit real secrets. `.env` is gitignored; keep `.env.example` in sync.
 
