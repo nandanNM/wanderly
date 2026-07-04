@@ -1,27 +1,49 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "sketchbook-ui";
-import {
-  deleteTripMediaAction,
-  tripMediaUploadTargetAction,
-  uploadTripMediaAction,
-} from "@/app/trips/actions";
+import { Badge, Button, Select } from "sketchbook-ui";
+import { deleteTripMediaAction } from "@/app/trips/actions";
+import { uploadTripMedia } from "./upload-media";
 import type { TripMediaItem } from "@/data/trips";
+import type { TripDay } from "@/lib/trip-days";
+
+const WHOLE_TRIP = "";
 
 export function TripGallery({
   tripId,
   media,
+  days,
 }: {
   tripId: string;
   media: TripMediaItem[];
+  days: TripDay[];
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Which day the next upload is tagged to ("" = whole trip / untagged).
+  const [dayDate, setDayDate] = useState<string>(WHOLE_TRIP);
+
+  const dayOptions = useMemo(
+    () => [
+      { value: WHOLE_TRIP, label: "Whole trip" },
+      ...days.map((d) => ({
+        value: d.date,
+        label: `Day ${d.number} · ${d.label}`,
+      })),
+    ],
+    [days],
+  );
+
+  // Quick lookup: dayDate -> "Day N" for the per-photo badge.
+  const dayLabel = useMemo(() => {
+    const map = new Map<string, string>();
+    days.forEach((d) => map.set(d.date, `Day ${d.number}`));
+    return map;
+  }, [days]);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -29,28 +51,7 @@ export function TripGallery({
     setBusy(true);
     setStatus("Uploading…");
     try {
-      // 1. Ask the server for a presigned target (key lives under events/<eventId>/).
-      const target = await tripMediaUploadTargetAction(
-        tripId,
-        file.name,
-        file.type,
-      );
-      if (!target.success) throw new Error(target.error);
-      // 2. Upload the bytes straight to S3.
-      const put = await fetch(target.signedUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      if (!put.ok) throw new Error("Upload to S3 failed.");
-      // 3. Record the object as trip media.
-      const res = await uploadTripMediaAction(tripId, {
-        storageKey: target.key,
-        fileName: file.name,
-        contentType: file.type,
-        fileSizeBytes: file.size,
-      });
-      if (!res.success) throw new Error(res.error);
+      await uploadTripMedia(tripId, file, dayDate || null);
       setStatus("Added!");
       router.refresh();
     } catch (err) {
@@ -84,6 +85,16 @@ export function TripGallery({
         >
           {busy ? "Uploading…" : "+ Add photo / video"}
         </Button>
+        {days.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-[#7a7a7a]">Tag to</span>
+            <Select
+              defaultValue={dayDate}
+              onChange={(v: string) => setDayDate(v)}
+              options={dayOptions}
+            />
+          </div>
+        )}
         <input
           ref={fileRef}
           type="file"
@@ -122,6 +133,11 @@ export function TripGallery({
                   />
                 )}
               </a>
+              {m.dayDate && dayLabel.has(m.dayDate) && (
+                <span className="absolute left-1.5 top-1.5">
+                  <Badge size="sm">{dayLabel.get(m.dayDate)}</Badge>
+                </span>
+              )}
               {m.canDelete && (
                 <button
                   type="button"

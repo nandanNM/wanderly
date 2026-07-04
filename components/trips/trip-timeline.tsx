@@ -1,11 +1,9 @@
 "use client";
 
-import {
-  addDays as addDaysFns,
-  differenceInCalendarDays,
-  format,
-  parseISO,
-} from "date-fns";
+import { useState } from "react";
+import type { TripMediaItem } from "@/data/trips";
+import type { TripDay } from "@/lib/trip-days";
+import { TripDayModal } from "./trip-day-modal";
 
 type ItineraryItem = {
   id: string;
@@ -17,46 +15,36 @@ type ItineraryItem = {
 };
 
 type Place = { id: string; name: string; category: string };
+type Note = { id: string; body: string; dayDate: string | null };
 
-function addDays(iso: string, n: number): string {
-  return format(addDaysFns(parseISO(iso), n), "yyyy-MM-dd");
-}
-
-function fmt(iso: string): string {
-  return format(parseISO(iso), "EEE, MMM d");
-}
+const MAX_THUMBS = 4;
 
 export function TripTimeline({
-  startDate,
-  endDate,
+  tripId,
+  days,
   itinerary,
   places,
+  media,
+  notes,
+  canContribute,
 }: {
-  startDate: string | null;
-  endDate: string | null;
+  tripId: string;
+  days: TripDay[];
   itinerary: ItineraryItem[];
   places: Place[];
+  media: TripMediaItem[];
+  notes: Note[];
+  canContribute: boolean;
 }) {
+  const [openDay, setOpenDay] = useState<TripDay | null>(null);
+
   const scheduledPlaceIds = new Set(
     itinerary.map((i) => i.placeId).filter(Boolean) as string[],
   );
   const unscheduled = places.filter((p) => !scheduledPlaceIds.has(p.id));
 
-  // Build the day list from the date range (fallback: days present in itinerary).
-  let days: { date: string; number: number }[] = [];
-  if (startDate && endDate) {
-    const total =
-      differenceInCalendarDays(parseISO(endDate), parseISO(startDate)) + 1;
-    days = Array.from({ length: Math.max(1, total) }, (_, i) => ({
-      date: addDays(startDate, i),
-      number: i + 1,
-    }));
-  } else {
-    const uniq = Array.from(
-      new Set(itinerary.map((i) => i.dayDate).filter(Boolean) as string[]),
-    ).sort();
-    days = uniq.map((date, i) => ({ date, number: i + 1 }));
-  }
+  const photosFor = (date: string) => media.filter((m) => m.dayDate === date);
+  const notesFor = (date: string) => notes.filter((n) => n.dayDate === date);
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,6 +56,9 @@ export function TripTimeline({
 
       {days.map((day) => {
         const items = itinerary.filter((i) => i.dayDate === day.date);
+        const dayPhotos = photosFor(day.date);
+        const dayNotes = notesFor(day.date);
+        const extra = dayPhotos.length - MAX_THUMBS;
         return (
           <div key={day.date} className="flex gap-4">
             {/* Day marker rail */}
@@ -83,7 +74,7 @@ export function TripTimeline({
               <p className="font-hand text-2xl font-bold leading-none">
                 Day {day.number}
               </p>
-              <p className="mb-2 text-sm text-[#7a7a7a]">{fmt(day.date)}</p>
+              <p className="mb-2 text-sm text-[#7a7a7a]">{day.label}</p>
               {items.length === 0 ? (
                 <p className="text-sm text-[#9a9a9a]">Nothing planned yet.</p>
               ) : (
@@ -103,6 +94,58 @@ export function TripTimeline({
                   ))}
                 </ul>
               )}
+
+              {/* Photos & memories — hover to peek, click to open the day. */}
+              <button
+                type="button"
+                onClick={() => setOpenDay(day)}
+                title={`View Day ${day.number} photos & memories`}
+                className="group/day mt-3 flex w-full flex-wrap items-center gap-2 rounded-xl border border-dashed border-black/15 p-2 text-left transition-colors hover:border-black/30 hover:bg-black/2"
+              >
+                {dayPhotos.length > 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    {dayPhotos.slice(0, MAX_THUMBS).map((m) => (
+                      <span
+                        key={m.id}
+                        className="h-12 w-12 overflow-hidden rounded-md border border-black/10 bg-white transition-transform group-hover/day:-translate-y-0.5"
+                      >
+                        {m.mediaType === "video" ? (
+                          <video
+                            src={m.url}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={m.url}
+                            alt={m.fileName}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </span>
+                    ))}
+                    {extra > 0 && (
+                      <span className="grid h-12 w-12 place-items-center rounded-md border border-black/10 bg-white text-sm font-medium text-[#5a5a5a]">
+                        +{extra}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm text-[#9a9a9a]">
+                    {canContribute
+                      ? "📸 Add photos & memories for this day"
+                      : "No photos yet"}
+                  </span>
+                )}
+
+                <span className="ml-auto flex items-center gap-2 text-xs text-[#7a7a7a]">
+                  {dayPhotos.length > 0 && <span>📸 {dayPhotos.length}</span>}
+                  {dayNotes.length > 0 && <span>✏️ {dayNotes.length}</span>}
+                  <span className="opacity-0 transition-opacity group-hover/day:opacity-100">
+                    View →
+                  </span>
+                </span>
+              </button>
             </div>
           </div>
         );
@@ -126,6 +169,16 @@ export function TripTimeline({
           </div>
         </div>
       )}
+
+      <TripDayModal
+        open={openDay !== null}
+        onClose={() => setOpenDay(null)}
+        tripId={tripId}
+        day={openDay}
+        photos={openDay ? photosFor(openDay.date) : []}
+        notes={openDay ? notesFor(openDay.date) : []}
+        canContribute={canContribute}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { format, parseISO } from "date-fns";
 import { Badge, Button, Card, Divider } from "sketchbook-ui";
 import { greenBadge } from "@/lib/site-content";
+import { buildTripDays } from "@/lib/trip-days";
 import type { TripDetail, TripMediaItem } from "@/data/trips";
 import { TripTimeline } from "./trip-timeline";
 import { TripGallery } from "./trip-gallery";
@@ -15,7 +16,7 @@ import type { MapPoint } from "./trip-map";
 const TripMap = dynamic(() => import("./trip-map").then((m) => m.TripMap), {
   ssr: false,
   loading: () => (
-    <div className="grid h-[420px] place-items-center rounded-2xl border border-black/10 bg-black/[0.03] text-[#7a7a7a]">
+    <div className="grid h-105 place-items-center rounded-2xl border border-black/10 bg-black/3 text-[#7a7a7a]">
       Loading map…
     </div>
   ),
@@ -59,6 +60,16 @@ export function TripDetailView({
   ]
     .filter(Boolean)
     .join(" · ");
+
+  // One shared day list for the roadmap timeline and the gallery day picker.
+  const days = buildTripDays(
+    trip.startDate,
+    trip.endDate,
+    trip.itinerary.map((i) => i.dayDate),
+  );
+
+  // Day-tagged notes surface on the roadmap; the sidebar shows general ones.
+  const generalNotes = trip.notes.filter((n) => !n.dayDate);
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
@@ -104,15 +115,18 @@ export function TripDetailView({
           <Card variant="paper">
             {tab === "timeline" && (
               <TripTimeline
-                startDate={trip.startDate}
-                endDate={trip.endDate}
+                tripId={trip.id}
+                days={days}
                 itinerary={trip.itinerary}
                 places={trip.places}
+                media={media}
+                notes={trip.notes}
+                canContribute={trip.isMember}
               />
             )}
             {tab === "map" && <TripMap points={points} />}
             {tab === "gallery" && (
-              <TripGallery tripId={trip.id} media={media} />
+              <TripGallery tripId={trip.id} media={media} days={days} />
             )}
           </Card>
         </div>
@@ -154,11 +168,11 @@ export function TripDetailView({
             </Card>
           )}
 
-          {trip.notes.length > 0 && (
+          {generalNotes.length > 0 && (
             <Card variant="sticky">
               <h2 className="font-hand text-2xl font-bold">Notes</h2>
               <ul className="mt-2 flex flex-col gap-2">
-                {trip.notes.map((n) => (
+                {generalNotes.map((n) => (
                   <li key={n.id} className="text-[#4a4a4a]">
                     ✏️ {n.body}
                   </li>

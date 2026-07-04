@@ -3,6 +3,7 @@
 import {
   createTrip,
   addTripMedia,
+  addTripDayNote,
   deleteTripMedia,
   tripMediaUploadTarget,
   type CreateTripInput,
@@ -116,6 +117,26 @@ export async function deleteTripMediaAction(
   }
 }
 
+export async function addTripDayNoteAction(
+  tripId: string,
+  dayDate: string,
+  body: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  if (!body?.trim()) {
+    return { success: false, error: "Write a memory first." };
+  }
+  try {
+    await addTripDayNote(tripId, dayDate, body);
+    return { success: true };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/forbidden|unauthorized/i.test(msg)) {
+      return { success: false, error: "Only trip members can add memories." };
+    }
+    return { success: false, error: "Could not save the memory." };
+  }
+}
+
 export async function uploadTripMediaAction(
   tripId: string,
   input: {
@@ -123,6 +144,7 @@ export async function uploadTripMediaAction(
     fileName: string;
     contentType: string;
     fileSizeBytes: number;
+    dayDate?: string | null;
   },
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {

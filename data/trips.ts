@@ -73,6 +73,7 @@ export type TripSummary = {
 export type TripDetail = TripSummary & {
   summary: string | null;
   isOwner: boolean;
+  isMember: boolean;
   members: { id: string; name: string; role: MemberRow["role"] }[];
   destinations: {
     id: string;
@@ -95,7 +96,7 @@ export type TripDetail = TripSummary & {
     placeId: string | null;
     notes: string | null;
   }[];
-  notes: { id: string; body: string }[];
+  notes: { id: string; body: string; dayDate: string | null }[];
   event: { id: string; shareToken: string | null } | null;
   pendingInvites: { id: string; email: string; role: string }[];
 };
@@ -132,6 +133,7 @@ export async function getTrip(id: string): Promise<TripDetail> {
   // Authorization: owner, a trip member, or (via the linked event) public.
   let allowed = user?.id === trip.ownerId;
   const isOwner = allowed;
+  let isMember = isOwner; // owners count as members for contribution rights
   if (!allowed && user) {
     const [m] = await db
       .select({ id: tripMembers.id })
@@ -139,6 +141,7 @@ export async function getTrip(id: string): Promise<TripDetail> {
       .where(and(eq(tripMembers.tripId, id), eq(tripMembers.userId, user.id)))
       .limit(1);
     allowed = Boolean(m);
+    isMember = Boolean(m);
   }
   let eventRow: InferSelectModel<typeof events> | undefined;
   if (trip.eventId) {
@@ -180,6 +183,7 @@ export async function getTrip(id: string): Promise<TripDetail> {
     ...toSummary(trip),
     summary: trip.summary,
     isOwner,
+    isMember,
     members: memberRows.map((m: MemberRow) => ({
       id: m.id,
       name: m.name,
@@ -206,7 +210,11 @@ export async function getTrip(id: string): Promise<TripDetail> {
       placeId: i.placeId,
       notes: i.notes,
     })),
-    notes: noteRows.map((n: NoteRow) => ({ id: n.id, body: n.body })),
+    notes: noteRows.map((n: NoteRow) => ({
+      id: n.id,
+      body: n.body,
+      dayDate: n.dayDate,
+    })),
     event:
       trip.eventId && eventRow
         ? { id: eventRow.id, shareToken: isOwner ? eventRow.shareToken : null }
@@ -238,9 +246,21 @@ export type TripMediaItem = {
   mediaType: string;
   fileName: string;
   url: string;
+  dayDate: string | null;
   createdAt: Date;
   canDelete: boolean;
 };
+
+/**
+ * Resolve a media row's public URL. Seed/demo rows store an absolute URL
+ * (e.g. an Unsplash image) directly in storageKey; real uploads store an S3
+ * object key that we turn into a bucket URL.
+ */
+function mediaUrl(storageKey: string): string {
+  return /^https?:\/\//.test(storageKey)
+    ? storageKey
+    : publicObjectUrl(storageKey);
+}
 
 function mediaTypeFor(
   contentType: string,
@@ -275,7 +295,8 @@ export async function listTripMedia(tripId: string): Promise<TripMediaItem[]> {
     id: m.id,
     mediaType: m.mediaType,
     fileName: m.fileName,
-    url: publicObjectUrl(m.storageKey),
+    url: mediaUrl(m.storageKey),
+    dayDate: m.dayDate,
     createdAt: m.createdAt,
     // The uploader or the trip owner can remove an item.
     canDelete: Boolean(
@@ -314,6 +335,7 @@ export async function addTripMedia(
     fileName: string;
     contentType: string;
     fileSizeBytes: number;
+    dayDate?: string | null;
   },
 ): Promise<void> {
   const [trip] = await db
@@ -331,6 +353,31 @@ export async function addTripMedia(
     fileName: input.fileName,
     mimeType: input.contentType,
     fileSizeBytes: input.fileSizeBytes,
+    dayDate: input.dayDate || null,
+  });
+  revalidatePath(`/trips/${tripId}`);
+}
+
+/** Add a memory note pinned to a specific roadmap day. Members only. */
+export async function addTripDayNote(
+  tripId: string,
+  dayDate: string,
+  body: string,
+): Promise<void> {
+  const text = body.trim();
+  if (!text) throw new Error("Note is empty");
+  const [trip] = await db
+    .select({ eventId: trips.eventId })
+    .from(trips)
+    .where(eq(trips.id, tripId))
+    .limit(1);
+  if (!trip?.eventId) throw new Error("This trip has no event.");
+  const member = await assertEventMember(trip.eventId); // must be an approved member
+  await db.insert(notes).values({
+    tripId,
+    authorId: member.id,
+    dayDate,
+    body: text,
   });
   revalidatePath(`/trips/${tripId}`);
 }
