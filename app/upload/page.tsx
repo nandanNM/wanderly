@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { SiteHeader } from "@/components/layout/site-header";
 
 type Upload = {
   id: string;
@@ -80,37 +81,42 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-6 p-8">
-      <h1 className="text-2xl font-semibold">Upload to S3</h1>
+    <div className="min-h-screen">
+      <SiteHeader />
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
+        <h1 className="font-hand text-4xl font-bold sm:text-5xl">
+          Upload to S3
+        </h1>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-sm text-gray-500">Choose a file</span>
-        <input type="file" onChange={uploadFile} disabled={busy} />
-      </label>
+        <label className="flex flex-col gap-2">
+          <span className="text-sm text-[#5a5a5a]">Choose a file</span>
+          <input type="file" onChange={uploadFile} disabled={busy} />
+        </label>
 
-      {status && <p className="text-sm">{status}</p>}
+        {status && <p className="text-sm">{status}</p>}
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">Recent uploads</h2>
-        {items.length === 0 ? (
-          <p className="text-sm text-gray-500">No uploads yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-1">
-            {items.map((u) => (
-              <li key={u.id} className="truncate text-sm">
-                <a
-                  href={u.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  {u.key}
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+        <section className="flex flex-col gap-2">
+          <h2 className="font-hand text-2xl font-bold">Recent uploads</h2>
+          {items.length === 0 ? (
+            <p className="text-sm text-gray-500">No uploads yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {items.map((u) => (
+                <li key={u.id} className="truncate text-sm">
+                  <a
+                    href={u.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {u.key}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }

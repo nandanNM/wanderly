@@ -1,13 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import {
-  getS3Client,
-  isS3Configured,
-  publicObjectUrl,
-  s3BucketName,
-} from "@/lib/s3";
+import { createPresignedUpload, isS3Configured } from "@/lib/s3";
 
+// Generic presigned-upload endpoint used by the standalone /upload demo page.
+// Real app features (avatars, trip media) use context-scoped, authenticated
+// server actions instead — see data/profile.ts and data/trips.ts.
 export async function GET(request: NextRequest) {
   if (!isS3Configured()) {
     return NextResponse.json({ error: "S3 not configured" }, { status: 500 });
@@ -27,19 +23,5 @@ export async function GET(request: NextRequest) {
   const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const key = `uploads/${crypto.randomUUID()}-${safeName}`;
 
-  const command = new PutObjectCommand({
-    Bucket: s3BucketName,
-    Key: key,
-    ContentType: contentType,
-  });
-
-  const signedUrl = await getSignedUrl(getS3Client(), command, {
-    expiresIn: 3600,
-  });
-
-  return NextResponse.json({
-    signedUrl,
-    key,
-    url: publicObjectUrl(key),
-  });
+  return NextResponse.json(await createPresignedUpload(key, contentType));
 }
