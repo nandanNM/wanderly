@@ -6,6 +6,9 @@ node_modules
 out
 build
 
+# drizzle generated migrations
+drizzle
+
 # misc
 *.tsbuildinfo
 next-env.d.ts
