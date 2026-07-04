@@ -10,7 +10,6 @@ import {
   Card,
   Checkbox,
   Divider,
-  Dropdown,
   Input,
   Modal,
   Progress,
@@ -19,11 +18,11 @@ import {
   Slider,
   Switch,
   Textarea,
-  Tooltip,
   ToastContainer,
   useToast,
 } from "sketchbook-ui";
 import { Logo } from "@/components/ui/logo";
+import { SiteHeader } from "@/components/layout/site-header";
 import { ClientOnly } from "@/components/ui/client-only";
 import SocialCards from "@/components/ui/card-fan-carousel";
 import { GlobePolaroids } from "@/components/globe-polaroids";
@@ -70,36 +69,7 @@ export function Landing() {
 
   return (
     <div className="min-h-full overflow-x-hidden">
-      {/* thin dark top bar (matches the reference) */}
-      <div className="h-1.5 w-full bg-[#2a2a2a]" />
-
-      {/* ---------- Nav ---------- */}
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Logo priority />
-          <span className="hidden sm:inline-flex">
-            <Badge size="sm" colors={greenBadge}>
-              Beta
-            </Badge>
-          </span>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Tooltip content="Star us on GitHub!">
-            <a href="https://github.com" target="_blank" rel="noreferrer">
-              <Button size="sm">GitHub</Button>
-            </a>
-          </Tooltip>
-          <Dropdown
-            customTrigger={<Avatar initials="W" size="sm" />}
-            items={[
-              { label: "Profile", icon: "edit" },
-              { label: "Settings", icon: "settings" },
-              { label: "Sign out", icon: "share", danger: true },
-            ]}
-          />
-        </div>
-      </header>
-      <div className="h-px w-full bg-black/10" />
+      <SiteHeader />
 
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 md:grid-cols-2 md:gap-10 md:py-12">
