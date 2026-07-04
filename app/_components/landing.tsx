@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   Accordion,
   AccordionItem,
@@ -241,9 +242,14 @@ export function Landing() {
       {/* ---------- Nav ---------- */}
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="hidden h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg sm:grid">
-            ✎
-          </span>
+          <Image
+            src="/logo.webp"
+            alt="Wanderly logo"
+            width={36}
+            height={36}
+            className="h-9 w-9"
+            priority
+          />
           <span className="font-hand border-b-[3px] border-[#6f97d8] pb-0.5 text-2xl font-bold sm:text-3xl">
             Wanderly
           </span>
@@ -588,7 +594,16 @@ export function Landing() {
       <footer className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         <Divider variant="zigzag" />
         <div className="mt-6 flex flex-col items-center justify-between gap-4 text-[#7a7a7a] sm:flex-row">
-          <span className="font-hand text-2xl">✎ Wanderly</span>
+          <span className="flex items-center gap-2 font-hand text-2xl">
+            <Image
+              src="/logo.webp"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7"
+            />
+            Wanderly
+          </span>
           <div className="flex items-center gap-3">
             <span className="text-sm">Built with Sketchbook UI</span>
             <Avatar initials="W" size="sm" />

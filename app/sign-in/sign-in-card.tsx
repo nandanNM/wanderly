@@ -62,9 +62,14 @@ export function SignInCard() {
       <div className="flex items-center justify-center px-4 py-12 md:border-l md:border-black/10">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center justify-center gap-2">
-            <span className="grid h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg">
-              ✎
-            </span>
+            <Image
+              src="/logo.webp"
+              alt="Wanderly logo"
+              width={36}
+              height={36}
+              className="h-9 w-9"
+              priority
+            />
             <span className="font-hand border-b-[3px] border-[#6f97d8] pb-0.5 text-3xl font-bold">
               Wanderly
             </span>
@@ -81,20 +86,17 @@ export function SignInCard() {
           />
 
           <Card variant="paper">
-            <div className="flex flex-col gap-6">
-              <div className="text-center">
+            <div className="flex flex-col items-center gap-5 text-center">
+              <div>
                 <h1 className="font-hand text-4xl font-bold">Welcome back</h1>
                 <p className="mt-1 text-[#5a5a5a]">
-                  Sign in to plan trips and keep every memory in one place.
+                  Your trips and memories are waiting. Let&apos;s pick up where
+                  you left off. ✎
                 </p>
               </div>
 
-              <div className="w-full">
-                <Button
-                  onClick={signInWithGoogle}
-                  disabled={loading}
-                  style={{ width: "100%" }}
-                >
+              <div className="flex justify-center">
+                <Button onClick={signInWithGoogle} disabled={loading}>
                   <span className="flex items-center justify-center gap-2.5">
                     <GoogleIcon />
                     {loading ? "Redirecting…" : "Continue with Google"}
@@ -102,7 +104,12 @@ export function SignInCard() {
                 </Button>
               </div>
 
-              <p className="text-center text-xs leading-relaxed text-[#7a7a7a]">
+              <p className="text-sm text-[#5a5a5a]">
+                No password needed — new here? We&apos;ll set up your account
+                automatically.
+              </p>
+
+              <p className="text-xs leading-relaxed text-[#9a9a9a]">
                 By continuing you agree to our Terms &amp; Privacy Policy.
               </p>
             </div>
