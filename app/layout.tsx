@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EventShare — Share your events, beautifully",
+  title: "Wanderly — See the world, live the story",
   description:
-    "Create public or private events, upload photos and videos, and share them with a hand-drawn touch.",
+    "Plan trips, invite your people, and collect every photo and video from the journey in one place you own.",
 };
 
 export default function RootLayout({

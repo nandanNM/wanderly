@@ -20,6 +20,7 @@ Next.js 16 (App Router) event-sharing platform. TypeScript, Tailwind v4, pnpm.
 - **Already wired:** the stylesheet is imported once in `app/layout.tsx` (`import "sketchbook-ui/style.css"`) and `SketchProvider` wraps the app via `app/providers.tsx`. Don't re-import the CSS or re-mount the provider.
 - **Theme:** the look is the default Caveat/paper theme (`bg #faf7f0`, `stroke/text #2a2a2a`). Every component takes `colors` and `typography` props for overrides. Use the `.font-hand` class (Caveat) for hand-drawn headings.
 - **Available components:** Button, Input, Textarea, Checkbox, Switch, Select, RadioGroup, Slider, Badge, Avatar, Card (`paper`/`notebook`/`sticky`), Divider (`scribble`/`dashed`/`dots`/`zigzag`), Progress, Skeleton, Spinner, Tooltip, Toast (`useToast`), Modal, Dropdown, Accordion.
+- **Exception — the marketing landing** (`app/_components/landing.tsx`, home page) is a bespoke clean/illustrated style (not sketchbook) by explicit request. In-app UI (dashboards, forms, etc.) still uses sketchbook-ui.
 
 ## 🔒 Data Access Layer (DAL) — the rule
 
