@@ -203,7 +203,7 @@ export function Landing() {
       <div className="h-1.5 w-full bg-[#2a2a2a]" />
 
       {/* ---------- Nav ---------- */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="hidden h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg sm:grid">
             ✎
@@ -236,7 +236,7 @@ export function Landing() {
       <div className="h-px w-full bg-black/10" />
 
       {/* ---------- Hero ---------- */}
-      <section className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:px-6 md:grid-cols-2 md:gap-10 md:py-12">
+      <section className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 md:grid-cols-2 md:gap-10 md:py-12">
         <div className="flex flex-col items-start gap-5">
           <Badge colors={greenBadge}>New — group trips</Badge>
           <h1 className="font-hand text-4xl font-bold leading-[1.15] sm:text-5xl lg:text-6xl">
@@ -265,7 +265,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Stats (Progress) ---------- */}
-      <section className="mx-auto grid w-full max-w-6xl gap-4 px-4 py-6 sm:grid-cols-3 sm:gap-6 sm:px-6">
+      <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-6 sm:grid-cols-3 sm:gap-6 sm:px-6">
         {stats.map((s) => (
           <Card key={s.label} variant="paper">
             {/* Progress renders hand-drawn SVG paths that don't hydrate
@@ -294,7 +294,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Features ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10">
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Everything you need for the journey
         </h2>
@@ -312,7 +312,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Plan your trip (form controls) ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10">
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Plan your trip
         </h2>
@@ -385,7 +385,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Live gallery preview (Skeleton + Spinner) ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10">
         <div className="mb-6 flex items-center justify-center gap-3">
           <Spinner variant="spiral" size="sm" />
           <h2 className="font-hand text-2xl font-bold sm:text-3xl">
@@ -405,7 +405,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Destinations ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10">
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Popular destinations
         </h2>
@@ -433,7 +433,7 @@ export function Landing() {
       {/* ---------- Pricing ---------- */}
       <section
         id="pricing"
-        className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10"
+        className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10"
       >
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Simple, honest pricing
@@ -489,7 +489,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Testimonials ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10">
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Loved by travelers
         </h2>
@@ -511,7 +511,7 @@ export function Landing() {
       </section>
 
       {/* ---------- FAQ ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10">
         <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Questions & answers
         </h2>
@@ -525,7 +525,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Newsletter / CTA ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 md:py-10">
         <Card variant="sticky">
           <h2 className="font-hand text-2xl font-bold sm:text-3xl">
             Stay in the loop
@@ -558,7 +558,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Footer ---------- */}
-      <footer className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+      <footer className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
         <Divider variant="zigzag" />
         <div className="mt-6 flex flex-col items-center justify-between gap-4 text-[#7a7a7a] sm:flex-row">
           <span className="font-hand text-2xl">✎ Wanderly</span>
