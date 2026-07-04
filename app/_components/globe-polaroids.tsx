@@ -137,8 +137,8 @@ export function GlobePolaroids({
         diffuse: 1.5,
         mapSamples: 16000,
         mapBrightness: 6,
-        baseColor: [0.29, 0.55, 0.53], // teal globe (#2f7d7a family)
-        markerColor: [0.88, 0.33, 0.17], // brand orange (#e0552b)
+        baseColor: [0.62, 0.74, 0.91], // periwinkle blue (#a6c1e9)
+        markerColor: [0.96, 0.85, 0.4], // highlighter yellow (#f7e98d)
         glowColor: [0.98, 0.968, 0.94], // paper glow (blends into #faf7f0)
         markerElevation: 0,
         markers: markers.map((m) => ({
@@ -147,7 +147,7 @@ export function GlobePolaroids({
           id: m.id,
         })),
         arcs: [],
-        arcColor: [0.88, 0.33, 0.17],
+        arcColor: [0.62, 0.74, 0.91],
         arcWidth: 0.5,
         arcHeight: 0.25,
         opacity: 0.9,
