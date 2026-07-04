@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/auth-schema";
 import { plans } from "@/db/plans-schema";
+import { subscriptions } from "@/db/billing-schema";
 
 // Only register Google when its credentials exist, so a missing env var can't
 // break auth init. Set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET to enable it.
@@ -59,6 +60,28 @@ export const auth = betterAuth({
             // plans table not migrated/seeded yet — leave planId null.
           }
           return { data: userData };
+        },
+        // Give every new user an active Free subscription.
+        after: async (createdUser) => {
+          try {
+            const [free] = await db
+              .select({ id: plans.id })
+              .from(plans)
+              .where(eq(plans.code, "free"))
+              .limit(1);
+            if (free) {
+              await db
+                .insert(subscriptions)
+                .values({
+                  userId: createdUser.id,
+                  planId: free.id,
+                  status: "active",
+                })
+                .onConflictDoNothing();
+            }
+          } catch {
+            // best-effort; the user still has planId set.
+          }
         },
       },
     },
