@@ -1,0 +1,20 @@
+# dependencies
+node_modules
+
+# next.js
+.next
+out
+build
+
+# misc
+*.tsbuildinfo
+next-env.d.ts
+pnpm-lock.yaml
+.DS_Store
+
+# public assets
+public
+
+# tooling / agent skill files
+.agents
+.husky
