@@ -30,7 +30,40 @@ import {
 import { GlobePolaroids } from "./globe-polaroids";
 import { ClientOnly } from "./client-only";
 
+// Cohesive palette — teal (primary, matches the globe) + orange (accent,
+// matches the globe markers) + paper (neutral). Reused across every component.
+const teal = {
+  bg: "#2f7d7a",
+  bgOverlay: "#276b68",
+  stroke: "#1f5f5c",
+  text: "#ffffff",
+};
+const orange = {
+  bg: "#e0552b",
+  bgOverlay: "#cd491f",
+  stroke: "#a83c18",
+  text: "#ffffff",
+};
 const paper = { bg: "#faf7f0", stroke: "#2a2a2a", text: "#2a2a2a" };
+const tealBadge = {
+  bg: "#dcebe8",
+  bgOverlay: "#cfe3df",
+  text: "#1f5f5c",
+  stroke: "#2f7d7a",
+};
+const orangeBadge = {
+  bg: "#fbe1d5",
+  bgOverlay: "#f7d2c0",
+  text: "#a83c18",
+  stroke: "#e0552b",
+};
+const tealAccent = "#2f7d7a";
+const tealAvatar = {
+  fallbackBg: "#2f7d7a",
+  text: "#ffffff",
+  stroke: "#1f5f5c",
+};
+const tealProgress = { fill: "#2f7d7a", stroke: "#1f5f5c" };
 
 const stats = [
   { value: 82, label: "Trips shared", variant: "hatching" as const },
@@ -177,7 +210,7 @@ export function Landing() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-3">
           <span className="font-hand text-3xl font-bold">✎ Wanderly</span>
-          <Badge variant="warning" size="sm">
+          <Badge size="sm" colors={tealBadge}>
             Beta
           </Badge>
         </div>
@@ -200,18 +233,20 @@ export function Landing() {
             </a>
           </Tooltip>
           <a href="/upload">
-            <Button size="sm">Sign in</Button>
+            <Button size="sm" colors={teal}>
+              Sign in
+            </Button>
           </a>
-          <Avatar initials="ME" size="sm" />
+          <Avatar initials="ME" size="sm" colors={tealAvatar} />
         </div>
       </header>
 
-      <Divider variant="scribble" />
+      <Divider variant="scribble" color={tealAccent} />
 
       {/* ---------- Hero ---------- */}
       <section className="mx-auto grid w-full max-w-6xl items-center gap-8 px-6 py-16 md:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
-          <Badge variant="success">New — group trips</Badge>
+          <Badge colors={tealBadge}>New — group trips</Badge>
           <h1 className="font-hand text-6xl font-bold leading-[1.02] sm:text-7xl">
             See the world,
             <br />
@@ -223,7 +258,9 @@ export function Landing() {
           </p>
           <div className="flex flex-wrap gap-4">
             <a href="/upload">
-              <Button size="lg">Get Started</Button>
+              <Button size="lg" colors={teal}>
+                Get Started
+              </Button>
             </a>
             <Button size="lg" colors={paper} onClick={() => setModalOpen(true)}>
               Plan a trip
@@ -259,6 +296,7 @@ export function Landing() {
                 value={s.value}
                 label={s.label}
                 variant={s.variant}
+                colors={tealProgress}
                 showPercentage
               />
             </ClientOnly>
@@ -315,6 +353,7 @@ export function Landing() {
                   name="visibility"
                   value={visibility}
                   onChange={setVisibility}
+                  colors={{ fill: tealAccent }}
                   options={[
                     { value: "private", label: "Private" },
                     { value: "public", label: "Public" },
@@ -328,12 +367,14 @@ export function Landing() {
               max={50}
               value={groupSize}
               onChange={setGroupSize}
+              colors={{ trackFill: tealAccent, thumbBg: tealAccent }}
             />
             <Switch
               label="Allow downloads"
               showLabel
               checked={allowDownloads}
               onChange={(e) => setAllowDownloads(e.target.checked)}
+              colors={{ trackChecked: tealAccent, strokeChecked: "#1f5f5c" }}
             />
             <Textarea
               label="Trip notes"
@@ -347,9 +388,12 @@ export function Landing() {
               label="I agree to the terms & privacy policy"
               checked={agreed}
               onChange={setAgreed}
+              colors={{ check: tealAccent }}
             />
             <div>
-              <Button onClick={createTrip}>Create trip</Button>
+              <Button colors={teal} onClick={createTrip}>
+                Create trip
+              </Button>
             </div>
           </div>
         </Card>
@@ -358,7 +402,7 @@ export function Landing() {
       {/* ---------- Live gallery preview (Skeleton + Spinner) ---------- */}
       <section className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="mb-6 flex items-center justify-center gap-3">
-          <Spinner variant="spiral" size="sm" />
+          <Spinner variant="spiral" size="sm" colors={{ stroke: tealAccent }} />
           <h2 className="font-hand text-4xl font-bold">
             Your gallery, syncing live
           </h2>
@@ -390,9 +434,9 @@ export function Landing() {
                     {d.name}
                   </h3>
                 </div>
-                <Badge variant="info">{d.country}</Badge>
+                <Badge colors={tealBadge}>{d.country}</Badge>
               </div>
-              <Divider variant="dashed" />
+              <Divider variant="dashed" color={tealAccent} />
               <a href="/upload">
                 <Button size="sm" colors={paper}>
                   Explore
@@ -417,7 +461,7 @@ export function Landing() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-hand text-4xl font-bold">{p.name}</h3>
-                <Badge variant={p.featured ? "success" : "default"}>
+                <Badge colors={p.featured ? orangeBadge : tealBadge}>
                   {p.featured ? "Popular" : p.name}
                 </Badge>
               </div>
@@ -425,7 +469,7 @@ export function Landing() {
                 {p.price}
                 <span className="text-xl text-[#7a7a7a]"> /mo</span>
               </p>
-              <Divider variant="dashed" />
+              <Divider variant="dashed" color={tealAccent} />
               <ul className="mb-4 mt-2 flex flex-col gap-2 text-[#5a5a5a]">
                 {p.perks.map((perk) => (
                   <li key={perk}>✏️ {perk}</li>
@@ -445,11 +489,12 @@ export function Landing() {
                     label="Storage"
                     variant="solid"
                     size="sm"
+                    colors={tealProgress}
                   />
                 </ClientOnly>
               </div>
               <a href="/upload">
-                <Button colors={p.featured ? undefined : paper}>{p.cta}</Button>
+                <Button colors={p.featured ? orange : paper}>{p.cta}</Button>
               </a>
             </Card>
           ))}
@@ -465,9 +510,9 @@ export function Landing() {
           {reviews.map((r) => (
             <Card key={r.name} variant="sticky">
               <p className="text-[#4a4a4a]">“{r.quote}”</p>
-              <Divider variant="dots" />
+              <Divider variant="dots" color={tealAccent} />
               <div className="flex items-center gap-3">
-                <Avatar initials={r.initials} size="sm" />
+                <Avatar initials={r.initials} size="sm" colors={tealAvatar} />
                 <div>
                   <p className="font-hand text-xl leading-none">{r.name}</p>
                   <p className="text-sm text-[#7a7a7a]">{r.role}</p>
@@ -510,6 +555,7 @@ export function Landing() {
               />
             </div>
             <Button
+              colors={teal}
               onClick={() =>
                 showToast(
                   email ? "You're on the list! ✎" : "Enter an email first",
@@ -525,12 +571,12 @@ export function Landing() {
 
       {/* ---------- Footer ---------- */}
       <footer className="mx-auto w-full max-w-6xl px-6 py-10">
-        <Divider variant="zigzag" />
+        <Divider variant="zigzag" color={tealAccent} />
         <div className="mt-6 flex flex-col items-center justify-between gap-4 text-[#7a7a7a] sm:flex-row">
           <span className="font-hand text-2xl">✎ Wanderly</span>
           <div className="flex items-center gap-3">
             <span className="text-sm">Built with Sketchbook UI</span>
-            <Avatar initials="W" size="sm" />
+            <Avatar initials="W" size="sm" colors={tealAvatar} />
           </div>
         </div>
       </footer>
@@ -552,6 +598,7 @@ export function Landing() {
             </Button>
             <Button
               size="sm"
+              colors={teal}
               onClick={() => {
                 setModalOpen(false);
                 showToast("Let's plan your trip! 🧳", "info");
