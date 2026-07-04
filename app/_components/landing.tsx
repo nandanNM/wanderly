@@ -27,9 +27,16 @@ import {
   ToastContainer,
   useToast,
 } from "sketchbook-ui";
-import { HeroIllustration } from "./hero-illustration";
+import { GlobePolaroids } from "./globe-polaroids";
+import { ClientOnly } from "./client-only";
 
 const paper = { bg: "#faf7f0", stroke: "#2a2a2a", text: "#2a2a2a" };
+
+const stats = [
+  { value: 82, label: "Trips shared", variant: "hatching" as const },
+  { value: 64, label: "Photos synced", variant: "scribble" as const },
+  { value: 95, label: "Happy travelers", variant: "dots" as const },
+];
 
 const features = [
   {
@@ -224,41 +231,39 @@ export function Landing() {
           </div>
         </div>
         <div className="relative">
-          {/*
-            Hero art: swap <HeroIllustration /> for your own image:
-            import Image from "next/image";
-            <Image src="/hero.png" alt="Traveler" width={520} height={520} priority />
-          */}
-          <HeroIllustration className="mx-auto w-full max-w-md" />
+          {/* Interactive 3D globe (cobe) with polaroid markers. Drag to spin.
+              Edit the destinations/photos in globe-polaroids.tsx. */}
+          <GlobePolaroids className="mx-auto w-full max-w-md" />
         </div>
       </section>
 
       {/* ---------- Stats (Progress) ---------- */}
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3">
-        <Card variant="paper">
-          <Progress
-            value={82}
-            label="Trips shared"
-            variant="hatching"
-            showPercentage
-          />
-        </Card>
-        <Card variant="paper">
-          <Progress
-            value={64}
-            label="Photos synced"
-            variant="scribble"
-            showPercentage
-          />
-        </Card>
-        <Card variant="paper">
-          <Progress
-            value={95}
-            label="Happy travelers"
-            variant="dots"
-            showPercentage
-          />
-        </Card>
+        {stats.map((s) => (
+          <Card key={s.label} variant="paper">
+            {/* Progress renders hand-drawn SVG paths that don't hydrate
+                deterministically, so defer it to the client with a plain
+                fallback that reserves the same space. */}
+            <ClientOnly
+              fallback={
+                <div>
+                  <div className="font-hand mb-1 flex justify-between text-xl">
+                    <span>{s.label}</span>
+                    <span>{s.value}%</span>
+                  </div>
+                  <div className="h-10 w-full rounded bg-black/5" />
+                </div>
+              }
+            >
+              <Progress
+                value={s.value}
+                label={s.label}
+                variant={s.variant}
+                showPercentage
+              />
+            </ClientOnly>
+          </Card>
+        ))}
       </section>
 
       {/* ---------- Features ---------- */}
@@ -427,12 +432,21 @@ export function Landing() {
                 ))}
               </ul>
               <div className="mb-4">
-                <Progress
-                  value={p.storage}
-                  label="Storage"
-                  variant="solid"
-                  size="sm"
-                />
+                <ClientOnly
+                  fallback={
+                    <div>
+                      <div className="font-hand mb-1 text-lg">Storage</div>
+                      <div className="h-6 w-full rounded bg-black/5" />
+                    </div>
+                  }
+                >
+                  <Progress
+                    value={p.storage}
+                    label="Storage"
+                    variant="solid"
+                    size="sm"
+                  />
+                </ClientOnly>
               </div>
               <a href="/upload">
                 <Button colors={p.featured ? undefined : paper}>{p.cta}</Button>
