@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button, Card, Divider } from "sketchbook-ui";
+import { Button, Card } from "sketchbook-ui";
 import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon() {
@@ -46,22 +46,22 @@ export function SignInCard() {
 
   return (
     <main className="grid min-h-screen md:grid-cols-2">
-      {/* Illustration panel (desktop) */}
-      <div className="hidden items-center justify-center bg-[#eaf1fb] p-10 md:flex">
+      {/* Illustration panel (desktop) — same paper background */}
+      <div className="hidden items-center justify-center p-12 md:flex">
         <Image
           src="/vacation.png"
           alt="Need a vacation — hand-drawn travel sketch"
           width={800}
           height={821}
           priority
-          className="h-auto w-full max-w-md"
+          className="h-auto w-full max-w-sm"
         />
       </div>
 
       {/* Sign-in panel */}
-      <div className="flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md">
-          <div className="mb-6 flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center px-4 py-12 md:border-l md:border-black/10">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex items-center justify-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg">
               ✎
             </span>
@@ -77,33 +77,35 @@ export function SignInCard() {
             width={400}
             height={410}
             priority
-            className="mx-auto mb-4 h-auto w-40 md:hidden"
+            className="mx-auto mb-6 h-auto w-36 md:hidden"
           />
 
           <Card variant="paper">
-            <div className="flex flex-col items-center gap-2 text-center">
-              <h1 className="font-hand text-4xl font-bold">Welcome back</h1>
-              <p className="text-[#5a5a5a]">
-                Sign in to plan trips and gather every memory in one place.
+            <div className="flex flex-col gap-6">
+              <div className="text-center">
+                <h1 className="font-hand text-4xl font-bold">Welcome back</h1>
+                <p className="mt-1 text-[#5a5a5a]">
+                  Sign in to plan trips and keep every memory in one place.
+                </p>
+              </div>
+
+              <div className="w-full">
+                <Button
+                  onClick={signInWithGoogle}
+                  disabled={loading}
+                  style={{ width: "100%" }}
+                >
+                  <span className="flex items-center justify-center gap-2.5">
+                    <GoogleIcon />
+                    {loading ? "Redirecting…" : "Continue with Google"}
+                  </span>
+                </Button>
+              </div>
+
+              <p className="text-center text-xs leading-relaxed text-[#7a7a7a]">
+                By continuing you agree to our Terms &amp; Privacy Policy.
               </p>
             </div>
-
-            <div className="my-6">
-              <Divider variant="dashed" />
-            </div>
-
-            <div className="flex justify-center">
-              <Button onClick={signInWithGoogle} disabled={loading}>
-                <span className="flex items-center justify-center gap-2">
-                  <GoogleIcon />
-                  {loading ? "Redirecting…" : "Continue with Google"}
-                </span>
-              </Button>
-            </div>
-
-            <p className="mt-6 text-center text-sm text-[#7a7a7a]">
-              By continuing you agree to our Terms & Privacy Policy.
-            </p>
           </Card>
 
           <p className="mt-6 text-center text-sm text-[#7a7a7a]">
