@@ -198,24 +198,26 @@ export function Landing() {
   }
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-full overflow-x-hidden">
       {/* thin dark top bar (matches the reference) */}
       <div className="h-1.5 w-full bg-[#2a2a2a]" />
 
       {/* ---------- Nav ---------- */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="hidden h-9 w-9 place-items-center rounded-md border border-black/15 bg-white text-lg sm:grid">
             ✎
           </span>
-          <span className="font-hand border-b-[3px] border-[#6f97d8] pb-0.5 text-3xl font-bold">
+          <span className="font-hand border-b-[3px] border-[#6f97d8] pb-0.5 text-2xl font-bold sm:text-3xl">
             Wanderly
           </span>
-          <Badge size="sm" colors={greenBadge}>
-            Beta
-          </Badge>
+          <span className="hidden sm:inline-flex">
+            <Badge size="sm" colors={greenBadge}>
+              Beta
+            </Badge>
+          </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Tooltip content="Star us on GitHub!">
             <a href="https://github.com" target="_blank" rel="noreferrer">
               <Button size="sm">GitHub</Button>
@@ -234,19 +236,19 @@ export function Landing() {
       <div className="h-px w-full bg-black/10" />
 
       {/* ---------- Hero ---------- */}
-      <section className="mx-auto grid w-full max-w-6xl items-center gap-8 px-6 py-16 md:grid-cols-2">
-        <div className="flex flex-col items-start gap-6">
+      <section className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-8 sm:px-6 md:grid-cols-2 md:gap-10 md:py-12">
+        <div className="flex flex-col items-start gap-5">
           <Badge colors={greenBadge}>New — group trips</Badge>
-          <h1 className="font-hand text-6xl font-bold leading-[1.15] sm:text-7xl">
+          <h1 className="font-hand text-4xl font-bold leading-[1.15] sm:text-5xl lg:text-6xl">
             See the <span style={hl(HL_BLUE)}>world</span>,
             <br />
             live the <span style={hl(HL_YELLOW)}>story</span>.
           </h1>
-          <p className="max-w-md text-lg text-[#5a5a5a]">
+          <p className="max-w-md text-base text-[#5a5a5a] sm:text-lg">
             Plan the trip, invite your people, and gather every photo and video
             from the journey into one place you actually own.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3 sm:gap-4">
             <a href="/upload">
               <Button size="lg">Get Started</Button>
             </a>
@@ -258,12 +260,12 @@ export function Landing() {
         <div className="relative">
           {/* Interactive 3D globe (cobe) with polaroid markers. Drag to spin.
               Edit the destinations/photos in globe-polaroids.tsx. */}
-          <GlobePolaroids className="mx-auto w-full max-w-md" />
+          <GlobePolaroids className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md" />
         </div>
       </section>
 
       {/* ---------- Stats (Progress) ---------- */}
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 sm:grid-cols-3">
+      <section className="mx-auto grid w-full max-w-6xl gap-4 px-4 py-6 sm:grid-cols-3 sm:gap-6 sm:px-6">
         {stats.map((s) => (
           <Card key={s.label} variant="paper">
             {/* Progress renders hand-drawn SVG paths that don't hydrate
@@ -292,15 +294,17 @@ export function Landing() {
       </section>
 
       {/* ---------- Features ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-12">
-        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Everything you need for the journey
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
           {features.map((f) => (
             <Card key={f.title} variant={f.variant}>
               <div className="text-3xl">{f.icon}</div>
-              <h3 className="font-hand mt-2 text-3xl font-bold">{f.title}</h3>
+              <h3 className="font-hand mt-2 text-2xl font-bold sm:text-3xl">
+                {f.title}
+              </h3>
               <p className="mt-1 text-[#5a5a5a]">{f.body}</p>
             </Card>
           ))}
@@ -308,8 +312,8 @@ export function Landing() {
       </section>
 
       {/* ---------- Plan your trip (form controls) ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-12">
-        <h2 className="font-hand mb-6 text-center text-5xl font-bold">
+      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Plan your trip
         </h2>
         <Card variant="notebook">
@@ -381,10 +385,10 @@ export function Landing() {
       </section>
 
       {/* ---------- Live gallery preview (Skeleton + Spinner) ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-12">
+      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
         <div className="mb-6 flex items-center justify-center gap-3">
           <Spinner variant="spiral" size="sm" />
-          <h2 className="font-hand text-4xl font-bold">
+          <h2 className="font-hand text-2xl font-bold sm:text-3xl">
             Your gallery, syncing live
           </h2>
         </div>
@@ -401,8 +405,8 @@ export function Landing() {
       </section>
 
       {/* ---------- Destinations ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-12">
-        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Popular destinations
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
@@ -411,7 +415,7 @@ export function Landing() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-4xl">{d.emoji}</div>
-                  <h3 className="font-hand mt-2 text-3xl font-bold">
+                  <h3 className="font-hand mt-2 text-2xl font-bold sm:text-3xl">
                     {d.name}
                   </h3>
                 </div>
@@ -427,8 +431,11 @@ export function Landing() {
       </section>
 
       {/* ---------- Pricing ---------- */}
-      <section id="pricing" className="mx-auto w-full max-w-6xl px-6 py-12">
-        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+      <section
+        id="pricing"
+        className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10"
+      >
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Simple, honest pricing
         </h2>
         <div className="grid items-start gap-6 md:grid-cols-3">
@@ -439,12 +446,14 @@ export function Landing() {
               className={p.featured ? "md:-translate-y-2" : ""}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-hand text-4xl font-bold">{p.name}</h3>
+                <h3 className="font-hand text-3xl font-bold sm:text-4xl">
+                  {p.name}
+                </h3>
                 <Badge colors={p.featured ? blueBadge : greenBadge}>
                   {p.featured ? "Popular" : p.name}
                 </Badge>
               </div>
-              <p className="font-hand mt-1 text-5xl font-bold">
+              <p className="font-hand mt-1 text-4xl font-bold sm:text-5xl">
                 {p.price}
                 <span className="text-xl text-[#7a7a7a]"> /mo</span>
               </p>
@@ -480,8 +489,8 @@ export function Landing() {
       </section>
 
       {/* ---------- Testimonials ---------- */}
-      <section className="mx-auto w-full max-w-6xl px-6 py-12">
-        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-10">
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Loved by travelers
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
@@ -502,8 +511,8 @@ export function Landing() {
       </section>
 
       {/* ---------- FAQ ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-12">
-        <h2 className="font-hand mb-8 text-center text-5xl font-bold">
+      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
+        <h2 className="font-hand mb-6 text-center text-3xl font-bold sm:text-4xl">
           Questions & answers
         </h2>
         <Accordion>
@@ -516,9 +525,11 @@ export function Landing() {
       </section>
 
       {/* ---------- Newsletter / CTA ---------- */}
-      <section className="mx-auto w-full max-w-3xl px-6 py-12">
+      <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 md:py-10">
         <Card variant="sticky">
-          <h2 className="font-hand text-4xl font-bold">Stay in the loop</h2>
+          <h2 className="font-hand text-2xl font-bold sm:text-3xl">
+            Stay in the loop
+          </h2>
           <p className="mb-4 text-[#5a5a5a]">
             Get notified when new features ship. No spam, ever.
           </p>
@@ -547,7 +558,7 @@ export function Landing() {
       </section>
 
       {/* ---------- Footer ---------- */}
-      <footer className="mx-auto w-full max-w-6xl px-6 py-10">
+      <footer className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <Divider variant="zigzag" />
         <div className="mt-6 flex flex-col items-center justify-between gap-4 text-[#7a7a7a] sm:flex-row">
           <span className="font-hand text-2xl">✎ Wanderly</span>
