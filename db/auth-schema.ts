@@ -2,19 +2,35 @@
 // Generated with: pnpm dlx @better-auth/cli@latest generate --output db/auth-schema.ts
 // Regenerate after changing auth config/plugins.
 
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { plans } from "./plans-schema";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
+  image: text("image"), // serves as the user's avatar
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  // --- App-domain fields (Event Sharing Platform) --------------------------
+  // Also declared as `user.additionalFields` in lib/auth.ts so Better Auth is
+  // aware of them. `planId` is populated on sign-up by a Better Auth database
+  // hook (assigns the "free" plan); a plan can't be deleted while in use.
+  username: text("username").unique(),
+  displayName: text("display_name"),
+  isActive: boolean("is_active").notNull().default(true),
+  planId: uuid("plan_id").references(() => plans.id, { onDelete: "restrict" }),
 });
 
 export const session = pgTable(
