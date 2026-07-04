@@ -2,6 +2,7 @@ import "server-only";
 
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import * as schema from "@/db/auth-schema";
@@ -63,4 +64,7 @@ export const auth = betterAuth({
     },
   },
   socialProviders,
+  // Admin plugin adds role + ban fields (role/banned/banReason/banExpires) to
+  // the user and admin management APIs. Users with role "admin" are admins.
+  plugins: [admin()],
 });
