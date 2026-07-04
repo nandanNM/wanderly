@@ -11,6 +11,16 @@ Next.js 16 (App Router) event-sharing platform. TypeScript, Tailwind v4, pnpm.
 - **Storage:** S3 uploads via presigned URLs — `lib/s3.ts`, `app/api/presigned`, `app/api/uploads`.
 - **Domain:** plans → users → events → event_members / media / media_access. Business rules (owner auto-add, storage sync, plan quotas, member caps) live in the `drizzle/*_event_rules` SQL migration; the schema ERD is `schema_erd.mermaid`.
 
+## 🎨 UI — Sketchbook UI (default)
+
+**Build all UI with [`sketchbook-ui`](https://sarthakrawat-1.github.io/sketchbook-ui/) by default.** Reach for a plain HTML element or a custom-styled component only when no Sketchbook component fits — and say so.
+
+- **Import components from `sketchbook-ui`**, e.g. `import { Button, Card, Input, Badge } from "sketchbook-ui"`. Prefer these over hand-rolled buttons/inputs/cards/etc.
+- **Client-only:** the library ships without `"use client"` directives but uses hooks, so its components render only inside a `"use client"` component/file. Server Components must delegate to a client child (see `app/page.tsx` → `app/_components/landing.tsx`).
+- **Already wired:** the stylesheet is imported once in `app/layout.tsx` (`import "sketchbook-ui/style.css"`) and `SketchProvider` wraps the app via `app/providers.tsx`. Don't re-import the CSS or re-mount the provider.
+- **Theme:** the look is the default Caveat/paper theme (`bg #faf7f0`, `stroke/text #2a2a2a`). Every component takes `colors` and `typography` props for overrides. Use the `.font-hand` class (Caveat) for hand-drawn headings.
+- **Available components:** Button, Input, Textarea, Checkbox, Switch, Select, RadioGroup, Slider, Badge, Avatar, Card (`paper`/`notebook`/`sticky`), Divider (`scribble`/`dashed`/`dots`/`zigzag`), Progress, Skeleton, Spinner, Tooltip, Toast (`useToast`), Modal, Dropdown, Accordion.
+
 ## 🔒 Data Access Layer (DAL) — the rule
 
 **All data access goes through the Data Access Layer in `data/`. Every time. No exceptions.**
