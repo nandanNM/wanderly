@@ -49,12 +49,12 @@ export function SignInCard() {
       {/* Illustration panel (desktop) */}
       <div className="hidden items-center justify-center bg-[#eaf1fb] p-10 md:flex">
         <Image
-          src="/3562.jpg"
+          src="/vacation.png"
           alt="Need a vacation — hand-drawn travel sketch"
           width={800}
           height={821}
           priority
-          className="h-auto w-full max-w-md mix-blend-multiply"
+          className="h-auto w-full max-w-md"
         />
       </div>
 
@@ -72,12 +72,12 @@ export function SignInCard() {
 
           {/* Compact illustration (mobile only) */}
           <Image
-            src="/3562.jpg"
+            src="/vacation.png"
             alt="Need a vacation — hand-drawn travel sketch"
             width={400}
             height={410}
             priority
-            className="mx-auto mb-4 h-auto w-40 mix-blend-multiply md:hidden"
+            className="mx-auto mb-4 h-auto w-40 md:hidden"
           />
 
           <Card variant="paper">
