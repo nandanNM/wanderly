@@ -5,6 +5,7 @@ import {
   text,
   varchar,
   bigint,
+  date,
   timestamp,
   index,
   primaryKey,
@@ -32,6 +33,8 @@ export const media = pgTable(
     mimeType: varchar("mime_type", { length: 150 }).notNull(),
     fileSizeBytes: bigint("file_size_bytes", { mode: "number" }).notNull(),
     caption: text("caption"),
+    // Optional: the trip roadmap day this media belongs to (photos of "Day 2").
+    dayDate: date("day_date"),
     visibility: mediaVisibility("visibility").notNull().default("event"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -43,6 +46,7 @@ export const media = pgTable(
   },
   (t) => [
     index("idx_media_event_created").on(t.eventId, t.createdAt),
+    index("idx_media_event_day").on(t.eventId, t.dayDate),
     index("idx_media_uploaded_by").on(t.uploadedBy),
     index("idx_media_visibility").on(t.eventId, t.visibility),
     check("media_file_size_check", sql`${t.fileSizeBytes} > 0`),

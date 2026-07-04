@@ -177,7 +177,8 @@ export const itinerary = pgTable(
   ],
 );
 
-// Free-form notes, attachable to a trip (and optionally a place).
+// Free-form notes, attachable to a trip (and optionally a place or a day).
+// `dayDate` lets a note be a "memory" pinned to a specific roadmap day.
 export const notes = pgTable(
   "notes",
   {
@@ -188,6 +189,7 @@ export const notes = pgTable(
     placeId: uuid("place_id").references(() => places.id, {
       onDelete: "cascade",
     }),
+    dayDate: date("day_date"),
     authorId: text("author_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -200,5 +202,8 @@ export const notes = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (t) => [index("idx_notes_trip").on(t.tripId)],
+  (t) => [
+    index("idx_notes_trip").on(t.tripId),
+    index("idx_notes_trip_day").on(t.tripId, t.dayDate),
+  ],
 );
