@@ -16,11 +16,7 @@ import {
   Progress,
   RadioGroup,
   Select,
-  Skeleton,
-  SkeletonCard,
-  SkeletonText,
   Slider,
-  Spinner,
   Switch,
   Textarea,
   Tooltip,
@@ -29,6 +25,7 @@ import {
 } from "sketchbook-ui";
 import { GlobePolaroids } from "./globe-polaroids";
 import { ClientOnly } from "./client-only";
+import SocialCards from "@/components/ui/card-fan-carousel";
 
 // Sketchbook UI default palette: cream/paper + black ink, with the signature
 // blue + yellow highlighter accents and green/olive hexagon badges.
@@ -46,6 +43,45 @@ const blueBadge = {
 };
 const HL_BLUE = "#a6c1e9";
 const HL_YELLOW = "#f7e98d";
+
+// Portrait travel photos for the card-fan gallery.
+const galleryCards = [
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=700&fit=crop",
+    alt: "Mountain landscape",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1511765224389-37f0e77cf0eb?w=400&h=700&fit=crop",
+    alt: "City at night",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=700&fit=crop",
+    alt: "Foggy forest",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=700&fit=crop",
+    alt: "Sunlit woods",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=700&fit=crop",
+    alt: "Tropical beach",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=700&fit=crop",
+    alt: "Starry mountains",
+  },
+  {
+    imgUrl:
+      "https://images.unsplash.com/photo-1476820865390-c52aeebb9891?w=400&h=700&fit=crop",
+    alt: "Golden sunset",
+  },
+];
 
 // Highlighter-pen effect used on hero words (wraps across lines cleanly).
 function hl(color: string): React.CSSProperties {
@@ -384,24 +420,15 @@ export function Landing() {
         </Card>
       </section>
 
-      {/* ---------- Live gallery preview (Skeleton + Spinner) ---------- */}
+      {/* ---------- Gallery (card fan) ---------- */}
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 md:py-10">
-        <div className="mb-6 flex items-center justify-center gap-3">
-          <Spinner variant="spiral" size="sm" />
-          <h2 className="font-hand text-2xl font-bold sm:text-3xl">
-            Your gallery, syncing live
-          </h2>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          <SkeletonCard showAvatar />
-          <Card variant="paper">
-            <Skeleton variant="rectangle" height={120} />
-            <div className="mt-3">
-              <SkeletonText lines={3} />
-            </div>
-          </Card>
-          <SkeletonCard showAvatar />
-        </div>
+        <h2 className="font-hand mb-1 text-center text-3xl font-bold sm:text-4xl">
+          Every moment, in one gallery
+        </h2>
+        <p className="mb-2 text-center text-[#5a5a5a]">
+          Hover to fan out the photos from your trips.
+        </p>
+        <SocialCards cards={galleryCards} />
       </section>
 
       {/* ---------- Destinations ---------- */}
