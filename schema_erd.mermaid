@@ -1,0 +1,158 @@
+%% ===========================================================================
+%% Event Sharing Platform — Entity Relationship Diagram
+%% ===========================================================================
+%% ENUMs:
+%%   event_visibility : public | private
+%%   media_type       : image | video | audio | document | other
+%%   media_visibility : event (all members) | restricted (specific users)
+%%   member_role      : owner | moderator | member
+%%   member_status    : pending | approved | blocked
+%%
+%% TRIGGERS / RULES (enforced in PostgreSQL, not shown as entities):
+%%   - events insert  -> creator auto-added as 'owner' member
+%%   - media insert   -> plan quota check (type / file size / per-event storage)
+%%   - media I/U/D    -> events.storage_used_bytes kept in sync
+%%   - members I/U    -> plan max_members_per_event cap (owners are free)
+%%
+%% VIEW: v_event_stats (event_id, name, visibility, storage_used_bytes,
+%%                      member_count [excl. owner], media_count)
+%%
+%% AUTH LAYER: user / session / account / verification are the Better Auth
+%%   tables (see db/auth-schema.ts). The app-domain `users` table and the Better
+%%   Auth `user` table represent the same principal; during integration they are
+%%   unified onto one users table.
+%% ===========================================================================
+erDiagram
+  PLANS ||--o{ USERS : "subscribes (RESTRICT)"
+  USERS ||--o{ EVENTS : "creates (CASCADE)"
+  EVENTS ||--o{ EVENT_MEMBERS : "has (CASCADE)"
+  USERS ||--o{ EVENT_MEMBERS : "joins (CASCADE)"
+  USERS |o--o{ EVENT_MEMBERS : "invited_by (SET NULL)"
+  EVENTS ||--o{ MEDIA : "contains (CASCADE)"
+  USERS ||--o{ MEDIA : "uploads (CASCADE)"
+  MEDIA ||--o{ MEDIA_ACCESS : "restricts (CASCADE)"
+  USERS ||--o{ MEDIA_ACCESS : "granted to (CASCADE)"
+  USERS |o--o{ MEDIA_ACCESS : "granted_by (SET NULL)"
+
+  PLANS {
+    uuid id PK
+    varchar code UK "free | pro | business"
+    varchar name
+    integer price_cents "cents, >= 0"
+    char currency "default USD"
+    integer max_events "NULL = unlimited"
+    integer max_members_per_event "NULL = unlimited"
+    bigint max_storage_per_event_bytes
+    bigint max_file_size_bytes
+    media_type_arr allowed_media_types "media_type[]"
+    boolean allow_downloads
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  USERS {
+    uuid id PK
+    varchar email UK
+    varchar username UK
+    varchar display_name
+    text password_hash
+    text avatar_url
+    uuid plan_id FK "-> plans.id"
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  EVENTS {
+    uuid id PK
+    uuid creator_id FK "-> users.id"
+    varchar name
+    text description
+    text logo_url
+    text banner_url
+    event_visibility visibility "default private"
+    uuid share_token UK "rotate to invalidate link"
+    boolean allow_downloads "NULL = inherit plan"
+    bigint storage_used_bytes "trigger-maintained"
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  EVENT_MEMBERS {
+    uuid event_id PK "FK -> events.id"
+    uuid user_id PK "FK -> users.id"
+    member_role role "default member"
+    member_status status "default approved"
+    uuid invited_by FK "-> users.id"
+    timestamptz joined_at
+  }
+
+  MEDIA {
+    uuid id PK
+    uuid event_id FK "-> events.id"
+    uuid uploaded_by FK "-> users.id"
+    media_type media_type
+    text storage_key "object-store key"
+    varchar file_name
+    varchar mime_type
+    bigint file_size_bytes "> 0"
+    text caption "image with text"
+    media_visibility visibility "default event"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  MEDIA_ACCESS {
+    uuid media_id PK "FK -> media.id"
+    uuid user_id PK "FK -> users.id"
+    uuid granted_by FK "-> users.id"
+    timestamptz created_at
+  }
+
+  %% ---- Better Auth layer -------------------------------------------------
+  USER ||--o{ SESSION : "has (CASCADE)"
+  USER ||--o{ ACCOUNT : "has (CASCADE)"
+
+  USER {
+    text id PK
+    text name
+    text email UK
+    boolean email_verified
+    text image
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  SESSION {
+    text id PK
+    text token UK
+    timestamptz expires_at
+    text ip_address
+    text user_agent
+    text user_id FK "-> user.id"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  ACCOUNT {
+    text id PK
+    text account_id
+    text provider_id
+    text user_id FK "-> user.id"
+    text password "credential hash"
+    text access_token
+    text refresh_token
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  VERIFICATION {
+    text id PK
+    text identifier
+    text value
+    timestamptz expires_at
+    timestamptz created_at
+    timestamptz updated_at
+  }
