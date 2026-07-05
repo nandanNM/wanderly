@@ -7,11 +7,24 @@ import {
   Card,
   Divider,
   Input,
+  Select,
   Textarea,
   ToastContainer,
   useToast,
 } from "sketchbook-ui";
 import { createTripAction } from "@/app/trips/actions";
+import type { CreateTripInput } from "@/data/trips";
+
+const TRIP_TYPE_OPTIONS = [
+  { value: "adventure", label: "Adventure" },
+  { value: "beach", label: "Beach" },
+  { value: "city", label: "City break" },
+  { value: "roadtrip", label: "Road trip" },
+  { value: "nature", label: "Nature" },
+  { value: "family", label: "Family" },
+  { value: "cruise", label: "Cruise" },
+  { value: "other", label: "Other" },
+];
 
 function daysBetween(start: string, end: string): number | null {
   if (!start || !end) return null;
@@ -26,6 +39,7 @@ export function TripForm() {
 
   const [title, setTitle] = useState("");
   const [destination, setDestination] = useState("");
+  const [type, setType] = useState("adventure");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [travelers, setTravelers] = useState<string[]>([""]);
@@ -46,6 +60,7 @@ export function TripForm() {
     const res = await createTripAction({
       title: title.trim(),
       destination: destination.trim(),
+      type: type as CreateTripInput["type"],
       startDate: startDate || undefined,
       endDate: endDate || undefined,
       travelers: travelers.map((t) => t.trim()).filter(Boolean),
@@ -93,6 +108,14 @@ export function TripForm() {
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
             />
+            <div>
+              <p className="font-hand mb-1 text-xl">Trip type</p>
+              <Select
+                defaultValue={type}
+                onChange={(v: string) => setType(v)}
+                options={TRIP_TYPE_OPTIONS}
+              />
+            </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <Input
                 label="Start date"

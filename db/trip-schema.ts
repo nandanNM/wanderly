@@ -29,6 +29,16 @@ export const tripStatus = pgEnum("trip_status", [
   "completed",
   "archived",
 ]);
+export const tripType = pgEnum("trip_type", [
+  "adventure",
+  "beach",
+  "city",
+  "roadtrip",
+  "nature",
+  "family",
+  "cruise",
+  "other",
+]);
 export const placeCategory = pgEnum("place_category", [
   "sightseeing",
   "food",
@@ -53,6 +63,7 @@ export const trips = pgTable(
     title: varchar("title", { length: 150 }).notNull(),
     // Primary destination summary (e.g. "Japan"); per-stop detail in destinations.
     destination: varchar("destination", { length: 150 }),
+    type: tripType("type"),
     startDate: date("start_date"),
     endDate: date("end_date"),
     summary: text("summary"),
