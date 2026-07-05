@@ -3,6 +3,7 @@ import "server-only";
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -93,6 +94,27 @@ export async function createPresignedUpload(
     expiresIn: 3600,
   });
   return { signedUrl, key, url: publicObjectUrl(key) };
+}
+
+/**
+ * Short-lived presigned GET URL for reading a private object. The bucket is
+ * private, so objects aren't publicly readable — callers presign a temporary
+ * URL for display instead of using the raw bucket URL. Pass `downloadName` to
+ * force a file download (Content-Disposition: attachment) with that filename.
+ */
+export async function presignedGetUrl(
+  key: string,
+  expiresIn = 3600,
+  downloadName?: string,
+): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: s3BucketName,
+    Key: key,
+    ...(downloadName
+      ? { ResponseContentDisposition: `attachment; filename="${downloadName}"` }
+      : {}),
+  });
+  return getSignedUrl(getS3Client(), command, { expiresIn });
 }
 
 /**

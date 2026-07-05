@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { TripMediaItem } from "@/data/trips";
 import type { TripDay } from "@/lib/trip-days";
 import { TripDayModal } from "./trip-day-modal";
@@ -27,6 +28,7 @@ export function TripTimeline({
   media,
   notes,
   canContribute,
+  canDownload,
 }: {
   tripId: string;
   days: TripDay[];
@@ -35,6 +37,7 @@ export function TripTimeline({
   media: TripMediaItem[];
   notes: Note[];
   canContribute: boolean;
+  canDownload: boolean;
 }) {
   const [openDay, setOpenDay] = useState<TripDay | null>(null);
 
@@ -107,7 +110,7 @@ export function TripTimeline({
                     {dayPhotos.slice(0, MAX_THUMBS).map((m) => (
                       <span
                         key={m.id}
-                        className="h-12 w-12 overflow-hidden rounded-md border border-black/10 bg-white transition-transform group-hover/day:-translate-y-0.5"
+                        className="relative h-12 w-12 overflow-hidden rounded-md border border-black/10 bg-[#eceae3] transition-transform group-hover/day:-translate-y-0.5"
                       >
                         {m.mediaType === "video" ? (
                           <video
@@ -115,11 +118,13 @@ export function TripTimeline({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={m.url}
                             alt={m.fileName}
-                            className="h-full w-full object-cover"
+                            fill
+                            loading="lazy"
+                            sizes="48px"
+                            className="object-cover"
                           />
                         )}
                       </span>
@@ -178,6 +183,7 @@ export function TripTimeline({
         photos={openDay ? photosFor(openDay.date) : []}
         notes={openDay ? notesFor(openDay.date) : []}
         canContribute={canContribute}
+        canDownload={canDownload}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import { format, parseISO } from "date-fns";
 import { Badge, Button, Card, Divider } from "sketchbook-ui";
 import { greenBadge } from "@/lib/site-content";
 import { buildTripDays } from "@/lib/trip-days";
-import type { TripDetail, TripMediaItem } from "@/data/trips";
+import type { TripDetail, TripMediaItem, TripStorage } from "@/data/trips";
 import { TripTimeline } from "./trip-timeline";
 import { TripGallery } from "./trip-gallery";
 import { TripInvite } from "./trip-invite";
@@ -26,12 +26,25 @@ function fmt(iso: string): string {
   return format(parseISO(iso), "MMM d, yyyy");
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  adventure: "Adventure",
+  beach: "Beach",
+  city: "City break",
+  roadtrip: "Road trip",
+  nature: "Nature",
+  family: "Family",
+  cruise: "Cruise",
+  other: "Other",
+};
+
 export function TripDetailView({
   trip,
   media,
+  storage,
 }: {
   trip: TripDetail;
   media: TripMediaItem[];
+  storage: TripStorage | null;
 }) {
   const [tab, setTab] = useState<"timeline" | "map" | "gallery">("timeline");
 
@@ -80,6 +93,7 @@ export function TripDetailView({
           </h1>
           <p className="mt-1 text-[#5a5a5a]">
             📍 {trip.destination ?? "Somewhere"}
+            {trip.type ? ` · ${TYPE_LABELS[trip.type] ?? trip.type}` : ""}
             {dateLine ? ` · ${dateLine}` : ""}
           </p>
         </div>
@@ -122,11 +136,18 @@ export function TripDetailView({
                 media={media}
                 notes={trip.notes}
                 canContribute={trip.isMember}
+                canDownload={storage?.allowDownloads ?? false}
               />
             )}
             {tab === "map" && <TripMap points={points} />}
             {tab === "gallery" && (
-              <TripGallery tripId={trip.id} media={media} days={days} />
+              <TripGallery
+                tripId={trip.id}
+                media={media}
+                days={days}
+                storage={storage}
+                canContribute={trip.isMember}
+              />
             )}
           </Card>
         </div>

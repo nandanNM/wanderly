@@ -1,7 +1,7 @@
 import "server-only";
 
 import { revalidatePath } from "next/cache";
-import { and, desc, eq, type InferSelectModel } from "drizzle-orm";
+import { and, desc, eq, inArray, type InferSelectModel } from "drizzle-orm";
 import { db } from "@/db";
 import {
   trips,
@@ -13,10 +13,18 @@ import {
   events,
   media,
   invitations,
+  user as users,
+  plans,
 } from "@/db/schema";
 import { getCurrentUser, requireUser } from "./auth";
 import { assertEventMember, assertEventViewable } from "./events";
-import { createPresignedUpload, deleteObject, publicObjectUrl } from "@/lib/s3";
+import {
+  createPresignedUpload,
+  deleteObject,
+  isS3Configured,
+  presignedGetUrl,
+  publicObjectUrl,
+} from "@/lib/s3";
 
 type TripRow = InferSelectModel<typeof trips>;
 type MemberRow = InferSelectModel<typeof tripMembers>;
@@ -64,10 +72,13 @@ export type TripSummary = {
   id: string;
   title: string;
   destination: string | null;
+  type: TripRow["type"];
   startDate: string | null;
   endDate: string | null;
   durationDays: number | null;
   status: TripRow["status"];
+  /** Up to 3 recent photo URLs for the card's photo stack. */
+  coverImages: string[];
 };
 
 export type TripDetail = TripSummary & {
@@ -106,10 +117,12 @@ function toSummary(t: TripRow): TripSummary {
     id: t.id,
     title: t.title,
     destination: t.destination,
+    type: t.type,
     startDate: t.startDate,
     endDate: t.endDate,
     durationDays: durationDays(t.startDate, t.endDate),
     status: t.status,
+    coverImages: [],
   };
 }
 
@@ -122,7 +135,48 @@ export async function listMyTrips(): Promise<TripSummary[]> {
     .from(trips)
     .where(eq(trips.ownerId, user.id))
     .orderBy(desc(trips.createdAt));
-  return rows.map(toSummary);
+
+  const summaries = rows.map(toSummary);
+
+  // Attach up to 3 recent photos per trip (for the card's photo stack).
+  const eventIds = rows
+    .map((t) => t.eventId)
+    .filter((id): id is string => Boolean(id));
+  if (eventIds.length > 0) {
+    const imgs = await db
+      .select({
+        eventId: media.eventId,
+        storageKey: media.storageKey,
+        createdAt: media.createdAt,
+      })
+      .from(media)
+      .where(
+        and(inArray(media.eventId, eventIds), eq(media.mediaType, "image")),
+      )
+      .orderBy(desc(media.createdAt));
+
+    // Group the newest 3 keys per event, then resolve their display URLs.
+    const keysByEvent = new Map<string, string[]>();
+    for (const m of imgs) {
+      const list = keysByEvent.get(m.eventId) ?? [];
+      if (list.length < 3) {
+        list.push(m.storageKey);
+        keysByEvent.set(m.eventId, list);
+      }
+    }
+    const urlsByEvent = new Map<string, string[]>();
+    await Promise.all(
+      Array.from(keysByEvent.entries()).map(async ([eventId, keys]) => {
+        urlsByEvent.set(eventId, await Promise.all(keys.map(mediaUrl)));
+      }),
+    );
+    for (let i = 0; i < rows.length; i++) {
+      const eventId = rows[i].eventId;
+      if (eventId) summaries[i].coverImages = urlsByEvent.get(eventId) ?? [];
+    }
+  }
+
+  return summaries;
 }
 
 export async function getTrip(id: string): Promise<TripDetail> {
@@ -252,14 +306,16 @@ export type TripMediaItem = {
 };
 
 /**
- * Resolve a media row's public URL. Seed/demo rows store an absolute URL
- * (e.g. an Unsplash image) directly in storageKey; real uploads store an S3
- * object key that we turn into a bucket URL.
+ * Resolve a media row's display URL. Seed/demo rows store an absolute URL
+ * (e.g. a Picsum image) directly in storageKey and are returned as-is; real
+ * uploads store a private S3 object key, for which we mint a short-lived
+ * presigned GET URL (the bucket isn't publicly readable). Falls back to the
+ * plain bucket URL if S3 credentials aren't configured.
  */
-function mediaUrl(storageKey: string): string {
-  return /^https?:\/\//.test(storageKey)
-    ? storageKey
-    : publicObjectUrl(storageKey);
+async function mediaUrl(storageKey: string): Promise<string> {
+  if (/^https?:\/\//.test(storageKey)) return storageKey;
+  if (!isS3Configured()) return publicObjectUrl(storageKey);
+  return presignedGetUrl(storageKey);
 }
 
 function mediaTypeFor(
@@ -291,18 +347,107 @@ export async function listTripMedia(tripId: string): Promise<TripMediaItem[]> {
     .from(media)
     .where(eq(media.eventId, trip.eventId))
     .orderBy(desc(media.createdAt));
-  return rows.map((m) => ({
-    id: m.id,
-    mediaType: m.mediaType,
-    fileName: m.fileName,
-    url: mediaUrl(m.storageKey),
-    dayDate: m.dayDate,
-    createdAt: m.createdAt,
-    // The uploader or the trip owner can remove an item.
-    canDelete: Boolean(
-      viewer && (m.uploadedBy === viewer.id || viewer.id === trip.ownerId),
-    ),
-  }));
+  return Promise.all(
+    rows.map(async (m) => ({
+      id: m.id,
+      mediaType: m.mediaType,
+      fileName: m.fileName,
+      url: await mediaUrl(m.storageKey),
+      dayDate: m.dayDate,
+      createdAt: m.createdAt,
+      // The uploader or the trip owner can remove an item.
+      canDelete: Boolean(
+        viewer && (m.uploadedBy === viewer.id || viewer.id === trip.ownerId),
+      ),
+    })),
+  );
+}
+
+// ---- storage quota ---------------------------------------------------------
+
+export type TripStorage = {
+  usedBytes: number;
+  limitBytes: number;
+  remainingBytes: number;
+  maxFileBytes: number;
+  /** Media types allowed on the owner's plan, e.g. ["image"]. */
+  allowedTypes: string[];
+  /** Whether the owner's plan permits downloading media. */
+  allowDownloads: boolean;
+};
+
+/**
+ * Storage usage + limits for a trip's backing event, derived from the event
+ * owner's plan. Powers the "space remaining" display and client-side upload
+ * validation (the DB triggers remain the source of truth).
+ */
+export async function getTripStorage(
+  tripId: string,
+): Promise<TripStorage | null> {
+  const [trip] = await db
+    .select({ eventId: trips.eventId })
+    .from(trips)
+    .where(eq(trips.id, tripId))
+    .limit(1);
+  if (!trip?.eventId) return null;
+  await assertEventViewable(trip.eventId); // authz (member or public)
+
+  const [row] = await db
+    .select({
+      usedBytes: events.storageUsedBytes,
+      limitBytes: plans.maxStoragePerEventBytes,
+      maxFileBytes: plans.maxFileSizeBytes,
+      allowedTypes: plans.allowedMediaTypes,
+      allowDownloads: plans.allowDownloads,
+    })
+    .from(events)
+    .innerJoin(users, eq(users.id, events.creatorId))
+    .innerJoin(plans, eq(plans.id, users.planId))
+    .where(eq(events.id, trip.eventId))
+    .limit(1);
+  if (!row) return null;
+
+  return {
+    usedBytes: row.usedBytes,
+    limitBytes: row.limitBytes,
+    remainingBytes: Math.max(0, row.limitBytes - row.usedBytes),
+    maxFileBytes: row.maxFileBytes,
+    allowedTypes: row.allowedTypes as string[],
+    allowDownloads: row.allowDownloads,
+  };
+}
+
+/**
+ * A short-lived URL for downloading a media file. Requires the owner's plan to
+ * allow downloads. For real S3 objects the URL forces a file download
+ * (Content-Disposition: attachment); demo/external URLs are returned as-is.
+ */
+export async function getMediaDownloadUrl(mediaId: string): Promise<string> {
+  const [row] = await db
+    .select({
+      eventId: media.eventId,
+      storageKey: media.storageKey,
+      fileName: media.fileName,
+    })
+    .from(media)
+    .where(eq(media.id, mediaId))
+    .limit(1);
+  if (!row) throw new Error("Not found");
+  await assertEventViewable(row.eventId); // authz (member or public)
+
+  // Gate on the event owner's plan.
+  const [event] = await db
+    .select({ allowDownloads: plans.allowDownloads })
+    .from(events)
+    .innerJoin(users, eq(users.id, events.creatorId))
+    .innerJoin(plans, eq(plans.id, users.planId))
+    .where(eq(events.id, row.eventId))
+    .limit(1);
+  if (!event?.allowDownloads) throw new Error("Downloads not allowed on plan");
+
+  if (/^https?:\/\//.test(row.storageKey)) return row.storageKey;
+  if (!isS3Configured()) return publicObjectUrl(row.storageKey);
+  return presignedGetUrl(row.storageKey, 3600, row.fileName);
 }
 
 /**
@@ -422,6 +567,7 @@ export async function deleteTripMedia(mediaId: string): Promise<void> {
 export type CreateTripInput = {
   title: string;
   destination: string;
+  type?: TripRow["type"];
   startDate?: string;
   endDate?: string;
   summary?: string;
@@ -453,6 +599,7 @@ export async function createTrip(input: CreateTripInput): Promise<string> {
       eventId: event.id,
       title: input.title,
       destination: input.destination,
+      type: input.type ?? null,
       startDate: input.startDate || null,
       endDate: input.endDate || null,
       summary: input.summary?.trim() || null,

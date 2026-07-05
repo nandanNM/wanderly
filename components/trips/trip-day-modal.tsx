@@ -1,10 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button, Modal, Textarea } from "sketchbook-ui";
 import { addTripDayNoteAction } from "@/app/trips/actions";
 import { uploadTripMedia } from "./upload-media";
+import { downloadMedia } from "./download-media";
 import type { TripMediaItem } from "@/data/trips";
 import type { TripDay } from "@/lib/trip-days";
 
@@ -18,6 +20,7 @@ export function TripDayModal({
   photos,
   notes,
   canContribute,
+  canDownload,
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,6 +29,7 @@ export function TripDayModal({
   photos: TripMediaItem[];
   notes: DayNote[];
   canContribute: boolean;
+  canDownload: boolean;
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -104,24 +108,44 @@ export function TripDayModal({
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {photos.map((m) => (
-                <a
+                <div
                   key={m.id}
-                  href={m.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block overflow-hidden rounded-lg border border-black/10 bg-white"
+                  className="group/photo relative aspect-square overflow-hidden rounded-lg border border-black/10 bg-[#eceae3]"
                 >
-                  {m.mediaType === "video" ? (
-                    <video src={m.url} className="h-24 w-full object-cover" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={m.url}
-                      alt={m.fileName}
-                      className="h-24 w-full object-cover"
-                    />
+                  <a
+                    href={m.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block h-full w-full"
+                  >
+                    {m.mediaType === "video" ? (
+                      <video
+                        src={m.url}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={m.url}
+                        alt={m.fileName}
+                        fill
+                        loading="lazy"
+                        sizes="(max-width: 640px) 33vw, 160px"
+                        className="object-cover"
+                      />
+                    )}
+                  </a>
+                  {canDownload && (
+                    <button
+                      type="button"
+                      onClick={() => downloadMedia(m.id, m.fileName)}
+                      aria-label="Download"
+                      title="Download"
+                      className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full border border-black/10 bg-white/90 text-xs text-[#5a5a5a] opacity-0 shadow-sm transition-opacity hover:text-[#5a7d2e] group-hover/photo:opacity-100"
+                    >
+                      ⬇
+                    </button>
                   )}
-                </a>
+                </div>
               ))}
             </div>
           )}

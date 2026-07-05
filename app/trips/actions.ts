@@ -5,10 +5,23 @@ import {
   addTripMedia,
   addTripDayNote,
   deleteTripMedia,
+  getMediaDownloadUrl,
   tripMediaUploadTarget,
   type CreateTripInput,
 } from "@/data/trips";
 import { inviteToTrip, acceptInvitation } from "@/data/invitations";
+
+const TRIP_TYPES = [
+  "adventure",
+  "beach",
+  "city",
+  "roadtrip",
+  "nature",
+  "family",
+  "cruise",
+  "other",
+] as const;
+type TripType = (typeof TRIP_TYPES)[number];
 
 // Thin action → DAL. Auth is enforced inside createTrip (requireUser).
 export async function createTripAction(
@@ -17,8 +30,12 @@ export async function createTripAction(
   if (!input.title?.trim() || !input.destination?.trim()) {
     return { success: false, error: "Title and destination are required." };
   }
+  // Only accept a known trip type; ignore anything else.
+  const type = TRIP_TYPES.includes(input.type as TripType)
+    ? (input.type as TripType)
+    : undefined;
   try {
-    const id = await createTrip(input);
+    const id = await createTrip({ ...input, type });
     return { success: true, id };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -114,6 +131,24 @@ export async function deleteTripMediaAction(
       };
     }
     return { success: false, error: "Could not delete that item." };
+  }
+}
+
+export async function mediaDownloadUrlAction(
+  mediaId: string,
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  try {
+    const url = await getMediaDownloadUrl(mediaId);
+    return { success: true, url };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/not allowed on plan/i.test(msg)) {
+      return {
+        success: false,
+        error: "Downloads aren't enabled on this plan.",
+      };
+    }
+    return { success: false, error: "Could not prepare the download." };
   }
 }
 
