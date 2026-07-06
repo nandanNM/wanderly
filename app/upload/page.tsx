@@ -84,9 +84,7 @@ export default function UploadPage() {
     <div className="min-h-screen">
       <SiteHeader />
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6">
-        <h1 className="font-hand text-4xl font-bold sm:text-5xl">
-          Upload to S3
-        </h1>
+        <h1 className="font-pixel text-4xl sm:text-5xl">Upload to S3</h1>
 
         <label className="flex flex-col gap-2">
           <span className="text-sm text-[#5a5a5a]">Choose a file</span>

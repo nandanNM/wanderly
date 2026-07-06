@@ -143,9 +143,7 @@ export function ProfileForm({
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-6">
-        <h1 className="font-head text-4xl font-bold sm:text-5xl">
-          Your profile
-        </h1>
+        <h1 className="font-pixel text-4xl sm:text-5xl">Your profile</h1>
         <p className="mt-1 text-muted-foreground">
           Update how you show up on Wanderly.
         </p>

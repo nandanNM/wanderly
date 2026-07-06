@@ -48,9 +48,7 @@ export function TripSettings({ trip }: { trip: TripDetail }) {
         >
           ← Back to {trip.title}
         </Link>
-        <h1 className="font-head mt-1 text-4xl font-bold sm:text-5xl">
-          Trip settings
-        </h1>
+        <h1 className="font-pixel mt-1 text-4xl sm:text-5xl">Trip settings</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-[220px_1fr]">

@@ -30,8 +30,9 @@ const WHOLE_TRIP = "";
 // Radix Select rejects an empty-string item value, so the "whole trip" option
 // uses this sentinel in the Select and maps back to WHOLE_TRIP ("") in state.
 const WHOLE_TRIP_OPTION = "__whole_trip__";
-// How many photos to reveal per infinite-scroll step.
-const PAGE = 12;
+// How many photos to reveal per infinite-scroll step (initial batch + each
+// time the sentinel scrolls into view).
+const PAGE = 10;
 
 type Job = {
   id: string;

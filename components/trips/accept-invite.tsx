@@ -26,9 +26,7 @@ export function AcceptInvite({ token }: { token: string }) {
   return (
     <main className="mx-auto w-full max-w-md px-4 py-16">
       <Card className="p-6">
-        <h1 className="font-head text-4xl font-bold">
-          You&apos;re invited! 🧳
-        </h1>
+        <h1 className="font-pixel text-4xl">You&apos;re invited! 🧳</h1>
         <p className="mt-2 text-muted-foreground">
           Join this trip to help plan the days and share photos &amp; videos
           with the crew.

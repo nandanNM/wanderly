@@ -40,9 +40,7 @@ export function TripsList({
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-head text-4xl font-bold sm:text-5xl">
-            Your trips
-          </h1>
+          <h1 className="font-pixel text-4xl sm:text-5xl">Your trips</h1>
           {plan && (
             <p className="mt-1 text-sm text-muted-foreground">
               {plan.planName} plan · {plan.tripsUsed}

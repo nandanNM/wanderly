@@ -86,9 +86,7 @@ export function TripForm() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
-      <h1 className="font-head text-4xl font-bold sm:text-5xl">
-        Plan a new trip
-      </h1>
+      <h1 className="font-pixel text-4xl sm:text-5xl">Plan a new trip</h1>
       <p className="mt-1 text-muted-foreground">
         We&apos;ll create a shared event too, so you can invite friends and
         collect photos.

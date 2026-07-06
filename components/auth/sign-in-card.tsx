@@ -58,7 +58,7 @@ export function SignInCard() {
           <Card className="p-6">
             <div className="flex flex-col items-center gap-5 text-center">
               <div>
-                <h1 className="font-head text-4xl font-bold">Welcome back</h1>
+                <h1 className="font-pixel text-4xl">Welcome back</h1>
                 <p className="mt-1 text-muted-foreground">
                   Your trips and memories are waiting. Let&apos;s pick up where
                   you left off. ✎

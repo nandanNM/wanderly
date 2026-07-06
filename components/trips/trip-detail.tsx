@@ -91,9 +91,7 @@ export function TripDetailView({
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-head text-4xl font-bold sm:text-5xl">
-            {trip.title}
-          </h1>
+          <h1 className="font-pixel text-4xl sm:text-5xl">{trip.title}</h1>
           <p className="mt-1 text-muted-foreground">
             📍 {trip.destination ?? "Somewhere"}
             {trip.type ? ` · ${TYPE_LABELS[trip.type] ?? trip.type}` : ""}

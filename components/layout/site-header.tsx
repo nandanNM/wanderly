@@ -41,7 +41,7 @@ export function SiteHeader() {
                 type="button"
                 className="cursor-pointer rounded-full outline-none"
               >
-                <Avatar size="sm">
+                <Avatar size="lg">
                   <AvatarImage
                     src={session.user.image ?? undefined}
                     alt={session.user.name ?? "User"}

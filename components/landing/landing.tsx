@@ -85,7 +85,7 @@ export function Landing() {
       <section className="mx-auto grid w-full max-w-7xl items-center gap-8 px-4 py-8 sm:px-6 md:grid-cols-2 md:gap-10 md:py-12">
         <div className="flex flex-col items-start gap-5">
           <Badge className="font-pixel">New — group trips</Badge>
-          <h1 className="font-head text-4xl leading-[1.15] sm:text-5xl lg:text-6xl">
+          <h1 className="font-pixel text-4xl leading-[1.15] sm:text-5xl lg:text-6xl">
             See the <span style={hl(HL_BLUE)}>world</span>,
             <br />
             live the <span style={hl(HL_YELLOW)}>story</span>.
