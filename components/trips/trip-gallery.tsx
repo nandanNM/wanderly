@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Badge, Progress, Select } from "sketchbook-ui";
+import { Badge, Button, Modal, Progress, Select } from "sketchbook-ui";
 import { deleteTripMediaAction } from "@/app/trips/actions";
 import { uploadTripMedia } from "./upload-media";
 import { downloadMedia } from "./download-media";
@@ -68,6 +68,8 @@ export function TripGallery({
   // Infinite scroll: only mount `visibleCount` photos, grow as the user scrolls.
   const [visibleCount, setVisibleCount] = useState(PAGE);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Upload lives in its own dialog.
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const allowDownloads = storage?.allowDownloads ?? false;
   const allowedTypes = useMemo(
@@ -229,65 +231,88 @@ export function TripGallery({
 
   return (
     <div>
-      {/* Storage usage */}
-      {storage && (
-        <div className="mb-4">
-          <div className="mb-1 flex items-center justify-between text-sm">
-            <span className="text-[#5a5a5a]">
-              {formatBytes(storage.usedBytes)} of{" "}
-              {formatBytes(storage.limitBytes)} used
-            </span>
+      {/* Header: compact storage summary + open the upload dialog */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {storage ? (
+          <span className="text-sm text-[#7a7a7a]">
+            {formatBytes(storage.usedBytes)} of{" "}
+            {formatBytes(storage.limitBytes)} used ·{" "}
             <span className="font-medium text-[#5a7d2e]">
               {formatBytes(storage.remainingBytes)} free
             </span>
-          </div>
-          <Progress value={usedPct} size="sm" />
-        </div>
-      )}
+          </span>
+        ) : (
+          <span />
+        )}
+        {canContribute && (
+          <Button size="sm" onClick={() => setUploadOpen(true)}>
+            + Add photos
+          </Button>
+        )}
+      </div>
 
-      {/* Dropzone */}
+      {/* Upload dialog */}
       {canContribute && (
-        <>
-          <div
-            onClick={() => !busy && fileRef.current?.click()}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragOver={(e) => e.preventDefault()}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={onDrop}
-            className={`flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
-              isDragging
-                ? "border-[#5a7d2e] bg-[#5a7d2e]/5"
-                : "border-black/20 hover:border-black/40"
-            }`}
-          >
-            <span className="text-2xl">📸</span>
-            <p className="font-hand text-xl font-bold">
-              Drop photos here or click to browse
-            </p>
-            <p className="text-xs text-[#9a9a9a]">
-              {allowedTypes.join(", ")}
-              {storage
-                ? ` · up to ${formatBytes(storage.maxFileBytes)} each`
-                : ""}
-            </p>
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept={accept}
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files) handleFiles(e.target.files);
-              if (fileRef.current) fileRef.current.value = "";
-            }}
-          />
+        <Modal
+          isOpen={uploadOpen}
+          onClose={() => !busy && setUploadOpen(false)}
+          title="Add photos & videos"
+          variant="paper"
+        >
+          <div className="flex flex-col gap-3">
+            {storage && (
+              <div>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-[#5a5a5a]">
+                    {formatBytes(storage.usedBytes)} of{" "}
+                    {formatBytes(storage.limitBytes)} used
+                  </span>
+                  <span className="font-medium text-[#5a7d2e]">
+                    {formatBytes(storage.remainingBytes)} free
+                  </span>
+                </div>
+                <Progress value={usedPct} size="sm" />
+              </div>
+            )}
 
-          {/* Day tag + upload progress */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div
+              onClick={() => !busy && fileRef.current?.click()}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={onDrop}
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed p-6 text-center transition-colors ${
+                isDragging
+                  ? "border-[#5a7d2e] bg-[#5a7d2e]/5"
+                  : "border-black/20 hover:border-black/40"
+              }`}
+            >
+              <span className="text-2xl">📸</span>
+              <p className="font-hand text-xl font-bold">
+                Drop photos here or click to browse
+              </p>
+              <p className="text-xs text-[#9a9a9a]">
+                {allowedTypes.join(", ")}
+                {storage
+                  ? ` · up to ${formatBytes(storage.maxFileBytes)} each`
+                  : ""}
+              </p>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept={accept}
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) handleFiles(e.target.files);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+            />
+
             {days.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[#7a7a7a]">
@@ -300,42 +325,44 @@ export function TripGallery({
                 />
               </div>
             )}
-          </div>
 
-          {jobs.length > 0 && (
-            <div className="mt-3 flex flex-col gap-2">
-              {jobs.map((j) => (
-                <div key={j.id} className="text-sm">
-                  <div className="mb-0.5 flex items-center justify-between gap-2">
-                    <span className="truncate text-[#5a5a5a]">{j.name}</span>
-                    <span
-                      className={
-                        j.status === "error" ? "text-red-600" : "text-[#7a7a7a]"
-                      }
-                    >
-                      {j.status === "error"
-                        ? j.error
-                        : j.status === "done"
-                          ? "Done"
-                          : `${j.percent}%`}
-                    </span>
+            {jobs.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {jobs.map((j) => (
+                  <div key={j.id} className="text-sm">
+                    <div className="mb-0.5 flex items-center justify-between gap-2">
+                      <span className="truncate text-[#5a5a5a]">{j.name}</span>
+                      <span
+                        className={
+                          j.status === "error"
+                            ? "text-red-600"
+                            : "text-[#7a7a7a]"
+                        }
+                      >
+                        {j.status === "error"
+                          ? j.error
+                          : j.status === "done"
+                            ? "Done"
+                            : `${j.percent}%`}
+                      </span>
+                    </div>
+                    {j.status !== "error" && (
+                      <Progress value={j.percent} size="sm" />
+                    )}
                   </div>
-                  {j.status !== "error" && (
-                    <Progress value={j.percent} size="sm" />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {errors.length > 0 && (
-            <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-2 text-sm text-red-700">
-              {errors.map((err, i) => (
-                <p key={i}>{err}</p>
-              ))}
-            </div>
-          )}
-        </>
+            {errors.length > 0 && (
+              <div className="rounded-lg border border-red-300 bg-red-50 p-2 text-sm text-red-700">
+                {errors.map((err, i) => (
+                  <p key={i}>{err}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
 
       {/* Grid */}
