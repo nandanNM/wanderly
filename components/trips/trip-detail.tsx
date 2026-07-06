@@ -137,22 +137,9 @@ export function TripDetailView({
         </Button>
       </div>
 
-      {/* Tab content — full width */}
-      <Card variant="paper">
-        {tab === "timeline" && (
-          <TripTimeline
-            tripId={trip.id}
-            days={days}
-            itinerary={trip.itinerary}
-            places={trip.places}
-            media={media}
-            notes={trip.notes}
-            canContribute={trip.isMember}
-            canDownload={storage?.allowDownloads ?? false}
-          />
-        )}
-        {tab === "map" && <TripMap points={points} />}
-        {tab === "gallery" && (
+      {/* Gallery uses the full width; Roadmap/Map sit beside About & Notes. */}
+      {tab === "gallery" ? (
+        <Card variant="paper">
           <TripGallery
             tripId={trip.id}
             media={media}
@@ -160,31 +147,49 @@ export function TripDetailView({
             storage={storage}
             canContribute={trip.isMember}
           />
-        )}
-      </Card>
-
-      {/* About & Notes — hidden on the gallery tab so it gets the full width */}
-      {tab !== "gallery" && (trip.summary || generalNotes.length > 0) && (
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          {trip.summary && (
+        </Card>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
             <Card variant="paper">
-              <h2 className="font-hand text-2xl font-bold">About</h2>
-              <p className="mt-2 text-[#5a5a5a]">{trip.summary}</p>
+              {tab === "timeline" && (
+                <TripTimeline
+                  tripId={trip.id}
+                  days={days}
+                  itinerary={trip.itinerary}
+                  places={trip.places}
+                  media={media}
+                  notes={trip.notes}
+                  canContribute={trip.isMember}
+                  canDownload={storage?.allowDownloads ?? false}
+                />
+              )}
+              {tab === "map" && <TripMap points={points} />}
             </Card>
-          )}
+          </div>
 
-          {generalNotes.length > 0 && (
-            <Card variant="sticky">
-              <h2 className="font-hand text-2xl font-bold">Notes</h2>
-              <ul className="mt-2 flex flex-col gap-2">
-                {generalNotes.map((n) => (
-                  <li key={n.id} className="text-[#4a4a4a]">
-                    ✏️ {n.body}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
+          {/* Side-by-side About & Notes */}
+          <div className="flex flex-col gap-6">
+            {trip.summary && (
+              <Card variant="paper">
+                <h2 className="font-hand text-2xl font-bold">About</h2>
+                <p className="mt-2 text-[#5a5a5a]">{trip.summary}</p>
+              </Card>
+            )}
+
+            {generalNotes.length > 0 && (
+              <Card variant="sticky">
+                <h2 className="font-hand text-2xl font-bold">Notes</h2>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {generalNotes.map((n) => (
+                    <li key={n.id} className="text-[#4a4a4a]">
+                      ✏️ {n.body}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+          </div>
         </div>
       )}
 
