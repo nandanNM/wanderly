@@ -164,37 +164,8 @@ export function TripDetailView({
           </Card>
         </div>
 
-        {/* Sidebar: crew summary, about, notes */}
+        {/* Sidebar: about, notes */}
         <div className="flex flex-col gap-6">
-          <Card variant="paper">
-            <div className="flex items-center justify-between">
-              <h2 className="font-hand text-2xl font-bold">Trip crew</h2>
-              <Badge size="sm" colors={greenBadge}>
-                {trip.members.length}
-              </Badge>
-            </div>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {trip.members.map((m) => (
-                <li
-                  key={m.id}
-                  className="rounded-full border border-black/15 bg-white px-3 py-1 text-sm"
-                >
-                  {m.name}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setShareOpen(true)}>
-                🔗 Share / invite
-              </Button>
-              {trip.isOwner && (
-                <Link href={`/trips/${trip.id}/settings`}>
-                  <Button size="sm">👥 Manage crew</Button>
-                </Link>
-              )}
-            </div>
-          </Card>
-
           {trip.summary && (
             <Card variant="paper">
               <h2 className="font-hand text-2xl font-bold">About</h2>
