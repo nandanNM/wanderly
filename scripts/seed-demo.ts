@@ -17,7 +17,7 @@ import { trips, media, notes } from "../db/schema";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle({ client: pool });
 
-const DEMO_PREFIX = "https://picsum.photos/seed/";
+const DEMO_PREFIX = "https://picsum.photos/";
 
 /** yyyy-MM-dd, n days after `iso` (UTC). */
 function addDays(iso: string, n: number): string {
@@ -26,18 +26,19 @@ function addDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Photos per day (1-based day number) — Picsum seeds keep them stable.
-const PHOTOS: { day: number; seed: string }[] = [
-  { day: 1, seed: "wanderly-arrival" },
-  { day: 1, seed: "wanderly-oldtown" },
-  { day: 1, seed: "wanderly-sunset" },
-  { day: 2, seed: "wanderly-market" },
-  { day: 2, seed: "wanderly-coffee" },
-  { day: 2, seed: "wanderly-street" },
-  { day: 2, seed: "wanderly-temple" },
-  { day: 3, seed: "wanderly-hike" },
-  { day: 3, seed: "wanderly-view" },
-  { day: 3, seed: "wanderly-dinner" },
+// Photos per day (1-based day number). Picsum's /id/ endpoint returns fixed,
+// bright, scenic landscape photos (unlike random /seed/ which can be dark).
+const PHOTOS: { day: number; id: number }[] = [
+  { day: 1, id: 1018 }, // misty mountains
+  { day: 1, id: 1015 }, // river canyon
+  { day: 1, id: 1039 }, // waterfall
+  { day: 2, id: 1043 }, // city rooftops
+  { day: 2, id: 1057 }, // harbour town
+  { day: 2, id: 1069 }, // coastal cliffs
+  { day: 2, id: 1016 }, // mountain valley
+  { day: 3, id: 1044 }, // mountain lake
+  { day: 3, id: 1047 }, // rocky peak
+  { day: 3, id: 1019 }, // forest lake
 ];
 
 // Memory notes per day.
@@ -100,8 +101,8 @@ async function main() {
       eventId: trip.eventId!,
       uploadedBy: trip.ownerId,
       mediaType: "image" as const,
-      storageKey: `${DEMO_PREFIX}${p.seed}/800/600`,
-      fileName: `${p.seed}.jpg`,
+      storageKey: `${DEMO_PREFIX}id/${p.id}/800/600`,
+      fileName: `demo-${p.id}.jpg`,
       mimeType: "image/jpeg",
       fileSizeBytes: 480_000,
       caption: "Demo photo",
