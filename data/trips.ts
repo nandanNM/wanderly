@@ -11,6 +11,7 @@ import {
   itinerary,
   notes,
   events,
+  eventMembers,
   media,
   invitations,
   user as users,
@@ -20,6 +21,7 @@ import { getCurrentUser, requireUser } from "./auth";
 import { assertEventMember, assertEventViewable } from "./events";
 import {
   createPresignedUpload,
+  deleteFolder,
   deleteObject,
   isS3Configured,
   presignedGetUrl,
@@ -108,7 +110,11 @@ export type TripDetail = TripSummary & {
     notes: string | null;
   }[];
   notes: { id: string; body: string; dayDate: string | null }[];
-  event: { id: string; shareToken: string | null } | null;
+  event: {
+    id: string;
+    shareToken: string | null;
+    visibility: "public" | "private";
+  } | null;
   pendingInvites: { id: string; email: string; role: string }[];
 };
 
@@ -271,7 +277,11 @@ export async function getTrip(id: string): Promise<TripDetail> {
     })),
     event:
       trip.eventId && eventRow
-        ? { id: eventRow.id, shareToken: isOwner ? eventRow.shareToken : null }
+        ? {
+            id: eventRow.id,
+            shareToken: isOwner ? eventRow.shareToken : null,
+            visibility: eventRow.visibility,
+          }
         : null,
     pendingInvites: isOwner
       ? (
@@ -560,6 +570,92 @@ export async function deleteTripMedia(mediaId: string): Promise<void> {
   await deleteObject(row.storageKey); // best-effort; frees storage quota
   await db.delete(media).where(eq(media.id, mediaId));
   if (trip) revalidatePath(`/trips/${trip.id}`);
+}
+
+// ---- settings: crew, sharing, delete --------------------------------------
+
+/** Load a trip the current user owns, or throw. Used by owner-only settings. */
+async function requireOwnedTrip(tripId: string) {
+  const user = await requireUser();
+  const [trip] = await db
+    .select()
+    .from(trips)
+    .where(eq(trips.id, tripId))
+    .limit(1);
+  if (!trip) throw new Error("Not found");
+  if (trip.ownerId !== user.id) throw new Error("Forbidden");
+  return trip;
+}
+
+/**
+ * Remove a member from the trip (owner only). Also revokes their event
+ * membership so they lose access to the shared gallery. The owner can't be
+ * removed.
+ */
+export async function removeTripMember(
+  tripId: string,
+  tripMemberId: string,
+): Promise<void> {
+  const trip = await requireOwnedTrip(tripId);
+  const [member] = await db
+    .select()
+    .from(tripMembers)
+    .where(
+      and(eq(tripMembers.id, tripMemberId), eq(tripMembers.tripId, tripId)),
+    )
+    .limit(1);
+  if (!member) throw new Error("Not found");
+  if (member.role === "owner") throw new Error("Can't remove the owner");
+
+  if (member.userId && trip.eventId) {
+    await db
+      .delete(eventMembers)
+      .where(
+        and(
+          eq(eventMembers.eventId, trip.eventId),
+          eq(eventMembers.userId, member.userId),
+        ),
+      );
+  }
+  await db.delete(tripMembers).where(eq(tripMembers.id, tripMemberId));
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath(`/trips/${tripId}/settings`);
+}
+
+/** Set the backing event's visibility (owner only). */
+export async function setTripVisibility(
+  tripId: string,
+  visibility: "public" | "private",
+): Promise<void> {
+  const trip = await requireOwnedTrip(tripId);
+  if (!trip.eventId) throw new Error("This trip has no event.");
+  await db
+    .update(events)
+    .set({ visibility })
+    .where(eq(events.id, trip.eventId));
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath(`/trips/${tripId}/settings`);
+}
+
+/**
+ * Delete a trip and everything under it (owner only): the S3 media folder
+ * (events/<eventId>/…), then the trip and its event. Trip children (members,
+ * itinerary, notes, …) cascade from the trip row; media/event members cascade
+ * from the event.
+ */
+export async function deleteTrip(tripId: string): Promise<void> {
+  const trip = await requireOwnedTrip(tripId);
+
+  if (trip.eventId) {
+    await deleteFolder(`events/${trip.eventId}/`); // best-effort S3 cleanup
+  }
+  // Delete the trip first (cascades trip_members, destinations, places,
+  // itinerary, notes), then the event (cascades media, event_members).
+  await db.delete(trips).where(eq(trips.id, tripId));
+  if (trip.eventId) {
+    await db.delete(events).where(eq(events.id, trip.eventId));
+  }
+  revalidatePath("/trips");
 }
 
 // ---- create ----------------------------------------------------------------

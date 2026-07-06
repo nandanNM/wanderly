@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { format, parseISO } from "date-fns";
-import { Badge, Button, Card, Divider } from "sketchbook-ui";
+import { Badge, Button, Card } from "sketchbook-ui";
 import { greenBadge } from "@/lib/site-content";
 import { buildTripDays } from "@/lib/trip-days";
 import type { TripDetail, TripMediaItem, TripStorage } from "@/data/trips";
 import { TripTimeline } from "./trip-timeline";
 import { TripGallery } from "./trip-gallery";
-import { TripInvite } from "./trip-invite";
+import { ShareDialog } from "./share-dialog";
 import type { MapPoint } from "./trip-map";
 
 // Leaflet touches window on import, so load the map client-only.
@@ -47,6 +48,7 @@ export function TripDetailView({
   storage: TripStorage | null;
 }) {
   const [tab, setTab] = useState<"timeline" | "map" | "gallery">("timeline");
+  const [shareOpen, setShareOpen] = useState(false);
 
   const points: MapPoint[] = [
     ...trip.destinations.map((d) => ({
@@ -97,7 +99,17 @@ export function TripDetailView({
             {dateLine ? ` · ${dateLine}` : ""}
           </p>
         </div>
-        <Badge colors={greenBadge}>{trip.status}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge colors={greenBadge}>{trip.status}</Badge>
+          <Button size="sm" onClick={() => setShareOpen(true)}>
+            🔗 Share
+          </Button>
+          {trip.isOwner && (
+            <Link href={`/trips/${trip.id}/settings`}>
+              <Button size="sm">⚙ Settings</Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -152,34 +164,35 @@ export function TripDetailView({
           </Card>
         </div>
 
-        {/* Sidebar: crew, sharing, notes */}
+        {/* Sidebar: crew summary, about, notes */}
         <div className="flex flex-col gap-6">
           <Card variant="paper">
-            <h2 className="font-hand text-2xl font-bold">Trip crew</h2>
-            <ul className="mt-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-hand text-2xl font-bold">Trip crew</h2>
+              <Badge size="sm" colors={greenBadge}>
+                {trip.members.length}
+              </Badge>
+            </div>
+            <ul className="mt-3 flex flex-wrap gap-2">
               {trip.members.map((m) => (
-                <li key={m.id} className="flex items-center justify-between">
-                  <span>{m.name}</span>
-                  <Badge size="sm" colors={greenBadge}>
-                    {m.role}
-                  </Badge>
+                <li
+                  key={m.id}
+                  className="rounded-full border border-black/15 bg-white px-3 py-1 text-sm"
+                >
+                  {m.name}
                 </li>
               ))}
             </ul>
-            <Divider variant="dashed" />
-            <p className="text-sm text-[#7a7a7a]">
-              This trip is backed by an event — invite friends to join and share
-              photos &amp; videos.{" "}
-              {trip.isOwner
-                ? "You're the organizer."
-                : "Ask the organizer for an invite."}
-            </p>
-            {trip.isOwner && (
-              <TripInvite
-                tripId={trip.id}
-                pendingInvites={trip.pendingInvites}
-              />
-            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => setShareOpen(true)}>
+                🔗 Share / invite
+              </Button>
+              {trip.isOwner && (
+                <Link href={`/trips/${trip.id}/settings`}>
+                  <Button size="sm">👥 Manage crew</Button>
+                </Link>
+              )}
+            </div>
           </Card>
 
           {trip.summary && (
@@ -203,6 +216,13 @@ export function TripDetailView({
           )}
         </div>
       </div>
+
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        tripId={trip.id}
+        title={trip.title}
+      />
     </main>
   );
 }

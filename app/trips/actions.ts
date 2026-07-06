@@ -7,9 +7,64 @@ import {
   deleteTripMedia,
   getMediaDownloadUrl,
   tripMediaUploadTarget,
+  removeTripMember,
+  setTripVisibility,
+  deleteTrip,
   type CreateTripInput,
 } from "@/data/trips";
 import { inviteToTrip, acceptInvitation } from "@/data/invitations";
+
+const OK = { success: true } as const;
+
+function fail(e: unknown, fallback: string) {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/forbidden/i.test(msg))
+    return {
+      success: false as const,
+      error: "Only the organizer can do that.",
+    };
+  if (/not found/i.test(msg))
+    return { success: false as const, error: "That trip no longer exists." };
+  return { success: false as const, error: fallback };
+}
+
+export async function removeTripMemberAction(
+  tripId: string,
+  memberId: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    await removeTripMember(tripId, memberId);
+    return OK;
+  } catch (e) {
+    return fail(e, "Could not remove that member.");
+  }
+}
+
+export async function setTripVisibilityAction(
+  tripId: string,
+  visibility: "public" | "private",
+): Promise<{ success: true } | { success: false; error: string }> {
+  if (visibility !== "public" && visibility !== "private") {
+    return { success: false, error: "Invalid visibility." };
+  }
+  try {
+    await setTripVisibility(tripId, visibility);
+    return OK;
+  } catch (e) {
+    return fail(e, "Could not update sharing.");
+  }
+}
+
+export async function deleteTripAction(
+  tripId: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    await deleteTrip(tripId);
+    return OK;
+  } catch (e) {
+    return fail(e, "Could not delete the trip.");
+  }
+}
 
 const TRIP_TYPES = [
   "adventure",

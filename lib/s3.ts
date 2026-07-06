@@ -5,6 +5,8 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -138,6 +140,42 @@ export async function deleteObjectByUrl(
 ): Promise<void> {
   const key = keyFromPublicUrl(url);
   if (key) await deleteObject(key);
+}
+
+/**
+ * Delete every object under a key prefix (a "folder"), e.g. `events/<id>/`.
+ * Lists and deletes in batches of up to 1000. Best-effort: logs on failure so
+ * cleanup never blocks the delete that triggered it.
+ */
+export async function deleteFolder(prefix: string): Promise<void> {
+  if (!isS3Configured() || !prefix) return;
+  const s3 = getS3Client();
+  try {
+    let token: string | undefined;
+    do {
+      const listed = await s3.send(
+        new ListObjectsV2Command({
+          Bucket: s3BucketName,
+          Prefix: prefix,
+          ContinuationToken: token,
+        }),
+      );
+      const keys = (listed.Contents ?? [])
+        .map((o) => o.Key)
+        .filter((k): k is string => Boolean(k));
+      if (keys.length > 0) {
+        await s3.send(
+          new DeleteObjectsCommand({
+            Bucket: s3BucketName,
+            Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true },
+          }),
+        );
+      }
+      token = listed.IsTruncated ? listed.NextContinuationToken : undefined;
+    } while (token);
+  } catch (err) {
+    console.warn(`Failed to delete S3 folder "${prefix}":`, err);
+  }
 }
 
 /** Map a MIME type to a file extension for building tidy object keys. */
