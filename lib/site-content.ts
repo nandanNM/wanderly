@@ -3,19 +3,7 @@ import type { CSSProperties } from "react";
 // Shared marketing content + theme tokens for the landing page. Keeping these
 // out of the components makes copy/data edits easy and the sections reusable.
 
-// --- Sketchbook palette (green/blue hexagon badges + highlighter accents) ---
-export const greenBadge = {
-  bg: "#e7f0d5",
-  bgOverlay: "#dcebc4",
-  text: "#5a7d2e",
-  stroke: "#93b063",
-};
-export const blueBadge = {
-  bg: "#dbe6f7",
-  bgOverlay: "#cadaf2",
-  text: "#3f5f97",
-  stroke: "#7fa0d8",
-};
+// --- Highlighter-pen accents for the hero words ---
 export const HL_BLUE = "#a6c1e9";
 export const HL_YELLOW = "#f7e98d";
 
@@ -31,26 +19,23 @@ export function hl(color: string): CSSProperties {
 }
 
 export const stats = [
-  { value: 82, label: "Trips shared", variant: "hatching" as const },
-  { value: 64, label: "Photos synced", variant: "scribble" as const },
-  { value: 95, label: "Happy travelers", variant: "dots" as const },
+  { value: 82, label: "Trips shared" },
+  { value: 64, label: "Photos synced" },
+  { value: 95, label: "Happy travelers" },
 ];
 
 export const features = [
   {
-    variant: "paper" as const,
     icon: "🗺️",
     title: "Plan every trip",
     body: "Create a trip, add your route, and keep everything in one shareable place.",
   },
   {
-    variant: "notebook" as const,
     icon: "📸",
     title: "Collect the memories",
     body: "Everyone drops their photos and videos straight into the trip.",
   },
   {
-    variant: "sticky" as const,
     icon: "🔒",
     title: "You control access",
     body: "Public or invite-only, with per-photo permissions when you need them.",

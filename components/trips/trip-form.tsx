@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Button,
-  Card,
-  Divider,
-  Input,
   Select,
-  Textarea,
-  ToastContainer,
-  useToast,
-} from "sketchbook-ui";
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { createTripAction } from "@/app/trips/actions";
 import type { CreateTripInput } from "@/data/trips";
 
@@ -35,7 +39,6 @@ function daysBetween(start: string, end: string): number | null {
 
 export function TripForm() {
   const router = useRouter();
-  const { toasts, showToast, dismissToast } = useToast();
 
   const [title, setTitle] = useState("");
   const [destination, setDestination] = useState("");
@@ -53,7 +56,7 @@ export function TripForm() {
 
   async function submit() {
     if (!title.trim() || !destination.trim()) {
-      showToast("Add a title and destination first ✎", "warning");
+      toast.warning("Add a title and destination first ✎");
       return;
     }
     setSaving(true);
@@ -73,79 +76,100 @@ export function TripForm() {
       note: note.trim() || undefined,
     });
     if (res.success) {
-      showToast("Trip created! 🧳", "success");
+      toast.success("Trip created! 🧳");
       router.push(`/trips/${res.id}`);
     } else {
       setSaving(false);
-      showToast(res.error, "error");
+      toast.error(res.error);
     }
   }
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
-      <h1 className="font-hand text-4xl font-bold sm:text-5xl">
+      <h1 className="font-head text-4xl font-bold sm:text-5xl">
         Plan a new trip
       </h1>
-      <p className="mt-1 text-[#5a5a5a]">
+      <p className="mt-1 text-muted-foreground">
         We&apos;ll create a shared event too, so you can invite friends and
         collect photos.
       </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* Basics */}
-        <Card variant="notebook" className="lg:col-span-2">
-          <h2 className="font-hand text-2xl font-bold">The basics</h2>
+        <Card className="p-6 lg:col-span-2">
+          <h2 className="font-head text-2xl font-bold">The basics</h2>
           <div className="mt-4 flex flex-col gap-5">
-            <Input
-              label="Trip title"
-              placeholder="e.g. Japan in spring"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <Input
-              label="Destination"
-              placeholder="e.g. Tokyo, Japan"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            />
-            <div>
-              <p className="font-hand mb-1 text-xl">Trip type</p>
-              <Select
-                defaultValue={type}
-                onChange={(v: string) => setType(v)}
-                options={TRIP_TYPE_OPTIONS}
+            <div className="grid gap-2">
+              <Label htmlFor="trip-title">Trip title</Label>
+              <Input
+                id="trip-title"
+                placeholder="e.g. Japan in spring"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="destination">Destination</Label>
+              <Input
+                id="destination"
+                placeholder="e.g. Tokyo, Japan"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Trip type</Label>
+              <Select value={type} onValueChange={(v) => setType(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRIP_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
-              <Input
-                label="Start date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <Input
-                label="End date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+              <div className="grid gap-2">
+                <Label htmlFor="start-date">Start date</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="end-date">End date</Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
             </div>
             {duration != null && (
-              <p className="font-hand text-xl">Duration: {duration} days</p>
+              <p className="font-head text-xl">Duration: {duration} days</p>
             )}
-            <Textarea
-              label="Notes"
-              placeholder="Anything to remember for this trip..."
-              showLines
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Anything to remember for this trip..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </div>
           </div>
         </Card>
 
         {/* Travelers */}
-        <Card variant="paper">
-          <h2 className="font-hand text-2xl font-bold">Travelers</h2>
+        <Card className="p-6">
+          <h2 className="font-head text-2xl font-bold">Travelers</h2>
           <div className="mt-4 flex flex-col gap-3">
             {travelers.map((t, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -164,7 +188,7 @@ export function TripForm() {
                   <button
                     type="button"
                     aria-label="Remove traveler"
-                    className="text-lg text-[#9a9a9a] hover:text-[#2a2a2a]"
+                    className="text-lg text-muted-foreground hover:text-foreground"
                     onClick={() =>
                       setTravelers(travelers.filter((_, j) => j !== i))
                     }
@@ -182,13 +206,13 @@ export function TripForm() {
       </div>
 
       {/* Places to visit */}
-      <Card variant="paper" className="mt-6">
-        <h2 className="font-hand text-2xl font-bold">Places to visit</h2>
-        <p className="text-sm text-[#7a7a7a]">
+      <Card className="p-6 mt-6">
+        <h2 className="font-head text-2xl font-bold">Places to visit</h2>
+        <p className="text-sm text-muted-foreground">
           Add a day number to drop it onto the roadmap; leave blank for the
           wishlist.
         </p>
-        <Divider variant="dashed" />
+        <Separator className="my-4" />
         <div className="flex flex-col gap-3">
           {places.map((p, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -220,7 +244,7 @@ export function TripForm() {
                 <button
                   type="button"
                   aria-label="Remove place"
-                  className="text-lg text-[#9a9a9a] hover:text-[#2a2a2a]"
+                  className="text-lg text-muted-foreground hover:text-foreground"
                   onClick={() => setPlaces(places.filter((_, j) => j !== i))}
                 >
                   ✕
@@ -242,12 +266,6 @@ export function TripForm() {
           {saving ? "Creating…" : "Create trip"}
         </Button>
       </div>
-
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={dismissToast}
-        position="bottom-right"
-      />
     </main>
   );
 }

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "sketchbook-ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { acceptInvitationAction } from "@/app/trips/actions";
 
 export function AcceptInvite({ token }: { token: string }) {
@@ -24,15 +25,15 @@ export function AcceptInvite({ token }: { token: string }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-16">
-      <Card variant="paper">
-        <h1 className="font-hand text-4xl font-bold">
+      <Card className="p-6">
+        <h1 className="font-head text-4xl font-bold">
           You&apos;re invited! 🧳
         </h1>
-        <p className="mt-2 text-[#5a5a5a]">
+        <p className="mt-2 text-muted-foreground">
           Join this trip to help plan the days and share photos &amp; videos
           with the crew.
         </p>
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
         <div className="mt-5">
           <Button onClick={accept} disabled={busy}>
             {busy ? "Joining…" : "Accept invite"}

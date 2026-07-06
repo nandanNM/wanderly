@@ -13,23 +13,25 @@ Next.js 16 (App Router) event-sharing platform. TypeScript, Tailwind v4, pnpm.
 
 ## 🎨 UI — Sketchbook UI (default)
 
-**Build all UI with [`sketchbook-ui`](https://sarthakrawat-1.github.io/sketchbook-ui/) by default.** Reach for a plain HTML element or a custom-styled component only when no Sketchbook component fits — and say so.
+**Build all UI with [RetroUI](https://retroui.dev/) — a neobrutalist [shadcn](https://ui.shadcn.com/) registry.** Components are shadcn-style and vendored into `components/ui/` (own the code, edit freely). Reach for a plain HTML element only when no primitive fits — and say so.
 
-- **Import components from `sketchbook-ui`**, e.g. `import { Button, Card, Input, Badge } from "sketchbook-ui"`. Prefer these over hand-rolled buttons/inputs/cards/etc.
-- **Client-only:** the library ships without `"use client"` directives but uses hooks, so its components render only inside a `"use client"` component/file. Server Components must delegate to a client child (see `app/page.tsx` → `components/landing/landing.tsx`).
-- **Already wired:** the stylesheet is imported once in `app/layout.tsx` (`import "sketchbook-ui/style.css"`) and `SketchProvider` wraps the app via `app/providers.tsx`. Don't re-import the CSS or re-mount the provider.
-- **Theme:** the look is the default Caveat/paper theme (`bg #faf7f0`, `stroke/text #2a2a2a`). Every component takes `colors` and `typography` props for overrides. Use the `.font-hand` class (Caveat) for hand-drawn headings.
-- **Available components:** Button, Input, Textarea, Checkbox, Switch, Select, RadioGroup, Slider, Badge, Avatar, Card (`paper`/`notebook`/`sticky`), Divider (`scribble`/`dashed`/`dots`/`zigzag`), Progress, Skeleton, Spinner, Tooltip, Toast (`useToast`), Modal, Dropdown, Accordion.
-- **The landing page** (`components/landing/landing.tsx`) is built entirely with sketchbook-ui and showcases the full component set; use it as a usage reference. Global CSS (`app/globals.css`) uses the paper theme (`bg #faf7f0`, `text #2a2a2a`).
+- **Import from `@/components/ui/<name>`**, e.g. `import { Button } from "@/components/ui/button"`, `import { Card, CardContent } from "@/components/ui/card"`. These are composition-based (`CardHeader`/`CardContent`, `DialogTrigger`/`DialogContent`, `SelectTrigger`/`SelectContent`, `AccordionItem`/`AccordionTrigger`/`AccordionContent`). Underlying primitives are the unified `radix-ui` package; styling uses `cva` + `cn` (`@/lib/utils`).
+- **Add more components** with the shadcn CLI (registries are wired in `components.json`): `pnpm dlx shadcn@latest add @retroui/<name>` (Radix) or `@retroui-base/<name>` (Base UI). `pnpm dlx shadcn@latest list @retroui` to browse. The **shadcn MCP server** is configured globally, so you can also browse/add via MCP.
+- **Client-only:** interactive primitives are `"use client"`. Server Components must delegate to a client child (see `app/page.tsx` → `components/landing/landing.tsx`).
+- **Theme:** neobrutalist — yellow primary (`--primary #ffdc58`), cream bg (`#fff7e8`), black borders (`border-2`), hard offset shadows, square corners (`--radius 0`). Tokens (`bg-primary`, `text-muted-foreground`, `border-border`, `bg-card`, `shadow-md`, …) live in `app/globals.css` (`:root` + `.dark`). Prefer tokens over ad-hoc hexes.
+- **Fonts** are centralized in `lib/fonts.ts` (loaded on `<html>` in `app/layout.tsx`): `font-head` = Archivo Black (headings), `font-sans` = Space Grotesk (body), `font-hand` = Caveat (**the `<Logo>` wordmark only** — keep it), `font-pixel` = Geist Pixel Square (retro number/eyebrow accent; local woff2 in `lib/fonts/`).
+- **Toasts** use [sonner](https://sonner.emilkowal.ski/): `import { toast } from "sonner"` → `toast.success/error/warning/info(msg)`. The `<Toaster/>` is mounted once in `app/providers.tsx`.
+- **Available components:** button, card, badge, input, label, textarea, select, avatar, radio-group, progress, switch, slider, dropdown-menu, checkbox, accordion, separator, dialog, sonner (plus anything else you `add`).
+- **The landing page** (`components/landing/landing.tsx`) is the RetroUI usage reference — it exercises the full set. `lib/site-content.ts` holds its copy/data.
 
 ## 📁 Components & reuse
 
 Shared components live under `components/` (never `app/_components`). When you build something used in more than one place, extract it here rather than duplicating.
 
-- `components/ui/` — small reusable primitives: `logo.tsx` (`<Logo>` wordmark), `google-icon.tsx`, `client-only.tsx` (hydration guard for non-deterministic sketch SVGs), `card-fan-carousel.tsx`.
+- `components/ui/` — RetroUI primitives (button, card, dialog, …) plus app widgets: `logo.tsx` (`<Logo>` wordmark), `google-icon.tsx`, `card-fan-carousel.tsx`.
 - `components/` — larger reusable widgets: `globe-polaroids.tsx` (cobe globe).
 - `components/landing/` — the marketing landing (`landing.tsx`); `components/auth/` — auth UI (`sign-in-card.tsx`).
-- `lib/site-content.ts` — landing **copy/data** (features, plans, reviews, faqs, destinations, gallery) + theme tokens (`greenBadge`, `blueBadge`, `HL_*`, `hl()`). Edit content here, not inline in components.
+- `lib/site-content.ts` — landing **copy/data** (features, plans, reviews, faqs, destinations, gallery) + hero highlighter helpers (`HL_*`, `hl()`). Edit content here, not inline in components.
 - Route files in `app/**/page.tsx` stay thin — a Server Component that renders a component from `components/` (and may export `metadata`).
 
 ## 🔒 Data Access Layer (DAL) — the rule

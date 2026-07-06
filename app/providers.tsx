@@ -1,10 +1,15 @@
 "use client";
 
-import { SketchProvider } from "sketchbook-ui";
+import { Toaster } from "@/components/ui/sonner";
 
-// Sketchbook UI components are client-side and reference shared SVG filters
-// provided by SketchProvider. Mounting it once at the root lets any sketch
-// component (in any "use client" file) render correctly.
+// App-wide client providers. RetroUI components are plain shadcn-style
+// components (no global provider needed); we only mount the sonner Toaster once
+// here so any component can fire toasts via `toast()` from "sonner".
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <SketchProvider>{children}</SketchProvider>;
+  return (
+    <>
+      {children}
+      <Toaster theme="light" position="bottom-right" />
+    </>
+  );
 }

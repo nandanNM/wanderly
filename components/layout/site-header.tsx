@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Avatar, Badge, Button, Dropdown } from "sketchbook-ui";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/ui/logo";
 import { authClient } from "@/lib/auth-client";
-import { greenBadge } from "@/lib/site-content";
 
 // Single shared navbar used across the app (landing, profile, upload).
 // Auth-aware: shows the user's avatar menu when signed in, a Sign in button
@@ -23,43 +31,47 @@ export function SiteHeader() {
             <Logo priority />
           </Link>
           <span className="hidden sm:inline-flex">
-            <Badge size="sm" colors={greenBadge}>
-              Beta
-            </Badge>
+            <Badge variant="default">Beta</Badge>
           </span>
         </div>
         {session?.user ? (
-          <Dropdown
-            customTrigger={
-              <Avatar
-                src={session.user.image ?? undefined}
-                initials={(session.user.name ?? "U").charAt(0).toUpperCase()}
-                size="sm"
-              />
-            }
-            items={[
-              {
-                label: "My trips",
-                icon: "duplicate",
-                onClick: () => router.push("/trips"),
-              },
-              {
-                label: "Profile",
-                icon: "edit",
-                onClick: () => router.push("/profile"),
-              },
-              {
-                label: "Sign out",
-                icon: "share",
-                danger: true,
-                onClick: async () => {
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="cursor-pointer rounded-full outline-none"
+              >
+                <Avatar size="sm">
+                  <AvatarImage
+                    src={session.user.image ?? undefined}
+                    alt={session.user.name ?? "User"}
+                  />
+                  <AvatarFallback>
+                    {(session.user.name ?? "U").charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => router.push("/trips")}>
+                My trips
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push("/profile")}>
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={async () => {
                   await authClient.signOut();
                   router.push("/");
                   router.refresh();
-                },
-              },
-            ]}
-          />
+                }}
+              >
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <Link href="/sign-in">
             <Button size="sm">Sign in</Button>

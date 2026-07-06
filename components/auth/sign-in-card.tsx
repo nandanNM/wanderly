@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button, Card } from "sketchbook-ui";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { GoogleIcon } from "@/components/ui/google-icon";
 import { authClient } from "@/lib/auth-client";
@@ -54,11 +55,11 @@ export function SignInCard() {
             className="mx-auto mb-6 h-auto w-36 md:hidden"
           />
 
-          <Card variant="paper">
+          <Card className="p-6">
             <div className="flex flex-col items-center gap-5 text-center">
               <div>
-                <h1 className="font-hand text-4xl font-bold">Welcome back</h1>
-                <p className="mt-1 text-[#5a5a5a]">
+                <h1 className="font-head text-4xl font-bold">Welcome back</h1>
+                <p className="mt-1 text-muted-foreground">
                   Your trips and memories are waiting. Let&apos;s pick up where
                   you left off. ✎
                 </p>
@@ -73,19 +74,19 @@ export function SignInCard() {
                 </Button>
               </div>
 
-              <p className="text-sm text-[#5a5a5a]">
+              <p className="text-sm text-muted-foreground">
                 No password needed — new here? We&apos;ll set up your account
                 automatically.
               </p>
 
-              <p className="text-xs leading-relaxed text-[#9a9a9a]">
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 By continuing you agree to our Terms &amp; Privacy Policy.
               </p>
             </div>
           </Card>
 
-          <p className="mt-6 text-center text-sm text-[#7a7a7a]">
-            <Link href="/" className="underline hover:text-[#2a2a2a]">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            <Link href="/" className="underline hover:text-foreground">
               ← Back to home
             </Link>
           </p>

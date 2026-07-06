@@ -3,18 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
-  Badge,
-  Button,
-  Card,
-  Divider,
-  Input,
-  Modal,
-  RadioGroup,
-  ToastContainer,
-  useToast,
-} from "sketchbook-ui";
-import { greenBadge } from "@/lib/site-content";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import {
   inviteAction,
   removeTripMemberAction,
@@ -34,7 +37,6 @@ const NAV: { key: Section; label: string; icon: string }[] = [
 
 export function TripSettings({ trip }: { trip: TripDetail }) {
   const router = useRouter();
-  const { toasts, showToast, dismissToast } = useToast();
   const [section, setSection] = useState<Section>("crew");
 
   return (
@@ -42,11 +44,11 @@ export function TripSettings({ trip }: { trip: TripDetail }) {
       <div className="mb-6">
         <Link
           href={`/trips/${trip.id}`}
-          className="text-sm text-[#5a7d2e] hover:underline"
+          className="text-sm text-muted-foreground hover:underline"
         >
           ← Back to {trip.title}
         </Link>
-        <h1 className="font-hand mt-1 text-4xl font-bold sm:text-5xl">
+        <h1 className="font-head mt-1 text-4xl font-bold sm:text-5xl">
           Trip settings
         </h1>
       </div>
@@ -61,8 +63,8 @@ export function TripSettings({ trip }: { trip: TripDetail }) {
               onClick={() => setSection(item.key)}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
                 section === item.key
-                  ? "border-black/20 bg-[#eef3e3] font-semibold text-[#2a2a2a]"
-                  : "border-transparent text-[#5a5a5a] hover:bg-black/[0.04]"
+                  ? "border-border bg-muted font-semibold text-foreground"
+                  : "border-transparent text-muted-foreground hover:bg-muted/50"
               }`}
             >
               <span>{item.icon}</span>
@@ -73,34 +75,25 @@ export function TripSettings({ trip }: { trip: TripDetail }) {
 
         {/* Panels */}
         <div>
-          {section === "crew" && (
-            <CrewSection trip={trip} showToast={showToast} router={router} />
-          )}
+          {section === "crew" && <CrewSection trip={trip} router={router} />}
           {section === "sharing" && (
-            <SharingSection trip={trip} showToast={showToast} router={router} />
+            <SharingSection trip={trip} router={router} />
           )}
           {section === "danger" && (
-            <DangerSection trip={trip} showToast={showToast} router={router} />
+            <DangerSection trip={trip} router={router} />
           )}
         </div>
       </div>
-
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={dismissToast}
-        position="bottom-right"
-      />
     </main>
   );
 }
 
 type SectionProps = {
   trip: TripDetail;
-  showToast: (msg: string, type?: "success" | "error" | "info") => void;
   router: ReturnType<typeof useRouter>;
 };
 
-function CrewSection({ trip, showToast, router }: SectionProps) {
+function CrewSection({ trip, router }: SectionProps) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -112,17 +105,16 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
     setBusy(false);
     if (res.success) {
       setEmail("");
-      showToast(
+      toast.success(
         res.added
           ? "Added to the trip! 🎉"
           : res.emailSent
             ? "Invite emailed ✉️"
             : "Invite created — set RESEND_API_KEY to email it.",
-        "success",
       );
       router.refresh();
     } else {
-      showToast(res.error, "error");
+      toast.error(res.error);
     }
   }
 
@@ -131,17 +123,17 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
     const res = await removeTripMemberAction(trip.id, id);
     setRemovingId(null);
     if (res.success) {
-      showToast("Removed from the trip.", "success");
+      toast.success("Removed from the trip.");
       router.refresh();
     } else {
-      showToast(res.error, "error");
+      toast.error(res.error);
     }
   }
 
   return (
-    <Card variant="paper">
-      <h2 className="font-hand text-2xl font-bold">Crew</h2>
-      <p className="mt-1 text-sm text-[#7a7a7a]">
+    <Card className="p-6">
+      <h2 className="font-head text-2xl font-bold">Crew</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Everyone on this trip can view the roadmap and share photos.
       </p>
 
@@ -149,16 +141,15 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
         {trip.members.map((m) => (
           <li
             key={m.id}
-            className="flex items-center justify-between rounded-lg border border-black/10 bg-white px-3 py-2"
+            className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
           >
             <span className="flex items-center gap-2">
               {m.name}
-              <Badge size="sm" colors={greenBadge}>
-                {m.role}
-              </Badge>
+              <Badge>{m.role}</Badge>
             </span>
             {m.role !== "owner" && (
               <Button
+                variant="outline"
                 size="sm"
                 onClick={() => remove(m.id)}
                 disabled={removingId === m.id}
@@ -170,12 +161,13 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
         ))}
       </ul>
 
-      <Divider variant="dashed" />
-      <p className="font-hand text-xl">Invite a friend</p>
+      <Separator className="my-4" />
+      <p className="font-head text-xl">Invite a friend</p>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="w-full">
+        <div className="grid w-full gap-2">
+          <Label htmlFor="invite-email">Email</Label>
           <Input
-            label="Email"
+            id="invite-email"
             type="email"
             placeholder="friend@example.com"
             value={email}
@@ -194,10 +186,8 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
               key={iv.id}
               className="flex items-center justify-between text-sm"
             >
-              <span className="text-[#5a5a5a]">{iv.email}</span>
-              <Badge size="sm" colors={greenBadge}>
-                pending
-              </Badge>
+              <span className="text-muted-foreground">{iv.email}</span>
+              <Badge>pending</Badge>
             </li>
           ))}
         </ul>
@@ -206,7 +196,7 @@ function CrewSection({ trip, showToast, router }: SectionProps) {
   );
 }
 
-function SharingSection({ trip, showToast, router }: SectionProps) {
+function SharingSection({ trip, router }: SectionProps) {
   const [visibility, setVisibility] = useState(
     trip.event?.visibility ?? "private",
   );
@@ -220,44 +210,45 @@ function SharingSection({ trip, showToast, router }: SectionProps) {
     const res = await setTripVisibilityAction(trip.id, v);
     setSaving(false);
     if (res.success) {
-      showToast(
+      toast.success(
         v === "public" ? "Anyone with the link can view." : "Trip is private.",
-        "success",
       );
       router.refresh();
     } else {
-      showToast(res.error, "error");
+      toast.error(res.error);
       setVisibility(trip.event?.visibility ?? "private"); // revert
     }
   }
 
   return (
-    <Card variant="paper">
-      <h2 className="font-hand text-2xl font-bold">Sharing</h2>
-      <p className="mt-1 text-sm text-[#7a7a7a]">
+    <Card className="p-6">
+      <h2 className="font-head text-2xl font-bold">Sharing</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Control who can open this trip and hand out the link.
       </p>
 
       <div className="mt-4">
-        <p className="mb-1 font-hand text-xl">Visibility</p>
-        <RadioGroup
-          name="visibility"
-          value={visibility}
-          onChange={change}
-          options={[
-            { value: "private", label: "Private — only crew can view" },
-            {
-              value: "public",
-              label: "Public — anyone with the link can view",
-            },
-          ]}
-        />
-        {saving && <p className="mt-1 text-xs text-[#9a9a9a]">Saving…</p>}
+        <p className="mb-1 font-head text-xl">Visibility</p>
+        <RadioGroup value={visibility} onValueChange={change}>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="private" id="vis-private" />
+            <Label htmlFor="vis-private">Private — only crew can view</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <RadioGroupItem value="public" id="vis-public" />
+            <Label htmlFor="vis-public">
+              Public — anyone with the link can view
+            </Label>
+          </div>
+        </RadioGroup>
+        {saving && (
+          <p className="mt-1 text-xs text-muted-foreground">Saving…</p>
+        )}
       </div>
 
-      <Divider variant="dashed" />
-      <p className="font-hand text-xl">Share link & QR</p>
-      <p className="text-sm text-[#7a7a7a]">
+      <Separator className="my-4" />
+      <p className="font-head text-xl">Share link & QR</p>
+      <p className="text-sm text-muted-foreground">
         Copy a link, show a QR code, or email an invite.
       </p>
       <div className="mt-2">
@@ -276,7 +267,7 @@ function SharingSection({ trip, showToast, router }: SectionProps) {
   );
 }
 
-function DangerSection({ trip, showToast, router }: SectionProps) {
+function DangerSection({ trip, router }: SectionProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -285,40 +276,62 @@ function DangerSection({ trip, showToast, router }: SectionProps) {
     setDeleting(true);
     const res = await deleteTripAction(trip.id);
     if (res.success) {
-      showToast("Trip deleted.", "success");
+      toast.success("Trip deleted.");
       router.push("/trips");
     } else {
       setDeleting(false);
-      showToast(res.error, "error");
+      toast.error(res.error);
     }
   }
 
   return (
-    <Card variant="paper" className="border-red-300">
-      <h2 className="font-hand text-2xl font-bold text-red-700">Danger zone</h2>
-      <p className="mt-1 text-sm text-[#7a7a7a]">
+    <Card className="border-destructive p-6">
+      <h2 className="font-head text-2xl font-bold text-destructive">
+        Danger zone
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Deleting a trip removes its roadmap, crew, memories and{" "}
         <strong>all uploaded photos &amp; videos</strong>. This can&apos;t be
         undone.
       </p>
       <div className="mt-3">
         <Button
+          variant="destructive"
           size="sm"
-          colors={{ bg: "#fee2e2", text: "#b91c1c", stroke: "#f1a3a3" }}
           onClick={() => setConfirmOpen(true)}
         >
           Delete this trip
         </Button>
       </div>
 
-      <Modal
-        isOpen={confirmOpen}
-        onClose={() => !deleting && setConfirmOpen(false)}
-        title="Delete this trip?"
-        variant="paper"
-        footer={
-          <div className="flex justify-end gap-2">
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(o) => {
+          if (!o && !deleting) setConfirmOpen(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this trip?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This permanently deletes <strong>{trip.title}</strong>, its crew,
+            memories and every uploaded photo/video (including the storage
+            folder).
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Type <strong>{trip.title}</strong> to confirm:
+          </p>
+          <div className="mt-1">
+            <Input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={trip.title}
+            />
+          </div>
+          <DialogFooter>
             <Button
+              variant="outline"
               size="sm"
               onClick={() => setConfirmOpen(false)}
               disabled={deleting}
@@ -326,32 +339,16 @@ function DangerSection({ trip, showToast, router }: SectionProps) {
               Cancel
             </Button>
             <Button
+              variant="destructive"
               size="sm"
-              colors={{ bg: "#fee2e2", text: "#b91c1c", stroke: "#f1a3a3" }}
               onClick={del}
               disabled={deleting || typed.trim() !== trip.title}
             >
               {deleting ? "Deleting…" : "Delete forever"}
             </Button>
-          </div>
-        }
-      >
-        <p className="text-sm text-[#5a5a5a]">
-          This permanently deletes <strong>{trip.title}</strong>, its crew,
-          memories and every uploaded photo/video (including the storage
-          folder).
-        </p>
-        <p className="mt-3 text-sm text-[#5a5a5a]">
-          Type <strong>{trip.title}</strong> to confirm:
-        </p>
-        <div className="mt-1">
-          <Input
-            value={typed}
-            onChange={(e) => setTyped(e.target.value)}
-            placeholder={trip.title}
-          />
-        </div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

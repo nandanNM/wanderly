@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { format, parseISO } from "date-fns";
-import { Badge, Button, Card } from "sketchbook-ui";
-import { greenBadge } from "@/lib/site-content";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { buildTripDays } from "@/lib/trip-days";
 import type { TripDetail, TripMediaItem, TripStorage } from "@/data/trips";
 import { TripTimeline } from "./trip-timeline";
@@ -17,7 +18,7 @@ import type { MapPoint } from "./trip-map";
 const TripMap = dynamic(() => import("./trip-map").then((m) => m.TripMap), {
   ssr: false,
   loading: () => (
-    <div className="grid h-105 place-items-center rounded-2xl border border-black/10 bg-black/3 text-[#7a7a7a]">
+    <div className="grid h-105 place-items-center rounded-2xl border border-black/10 bg-black/3 text-muted-foreground">
       Loading map…
     </div>
   ),
@@ -90,17 +91,17 @@ export function TripDetailView({
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-hand text-4xl font-bold sm:text-5xl">
+          <h1 className="font-head text-4xl font-bold sm:text-5xl">
             {trip.title}
           </h1>
-          <p className="mt-1 text-[#5a5a5a]">
+          <p className="mt-1 text-muted-foreground">
             📍 {trip.destination ?? "Somewhere"}
             {trip.type ? ` · ${TYPE_LABELS[trip.type] ?? trip.type}` : ""}
             {dateLine ? ` · ${dateLine}` : ""}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge colors={greenBadge}>{trip.status}</Badge>
+          <Badge variant="default">{trip.status}</Badge>
           <Button size="sm" onClick={() => setShareOpen(true)}>
             🔗 Share
           </Button>
@@ -116,21 +117,21 @@ export function TripDetailView({
       <div className="mb-4 flex gap-2">
         <Button
           size="sm"
-          colors={tab === "timeline" ? greenBadge : undefined}
+          variant={tab === "timeline" ? "default" : "outline"}
           onClick={() => setTab("timeline")}
         >
           🗓 Roadmap
         </Button>
         <Button
           size="sm"
-          colors={tab === "map" ? greenBadge : undefined}
+          variant={tab === "map" ? "default" : "outline"}
           onClick={() => setTab("map")}
         >
           🗺 Map
         </Button>
         <Button
           size="sm"
-          colors={tab === "gallery" ? greenBadge : undefined}
+          variant={tab === "gallery" ? "default" : "outline"}
           onClick={() => setTab("gallery")}
         >
           📸 Gallery
@@ -139,7 +140,7 @@ export function TripDetailView({
 
       {/* Gallery uses the full width; Roadmap/Map sit beside About & Notes. */}
       {tab === "gallery" ? (
-        <Card variant="paper">
+        <Card className="p-6">
           <TripGallery
             tripId={trip.id}
             media={media}
@@ -151,7 +152,7 @@ export function TripDetailView({
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <Card variant="paper">
+            <Card className="p-6">
               {tab === "timeline" && (
                 <TripTimeline
                   tripId={trip.id}
@@ -171,18 +172,18 @@ export function TripDetailView({
           {/* Side-by-side About & Notes */}
           <div className="flex flex-col gap-6">
             {trip.summary && (
-              <Card variant="paper">
-                <h2 className="font-hand text-2xl font-bold">About</h2>
-                <p className="mt-2 text-[#5a5a5a]">{trip.summary}</p>
+              <Card className="p-6">
+                <h2 className="font-head text-2xl font-bold">About</h2>
+                <p className="mt-2 text-muted-foreground">{trip.summary}</p>
               </Card>
             )}
 
             {generalNotes.length > 0 && (
-              <Card variant="sticky">
-                <h2 className="font-hand text-2xl font-bold">Notes</h2>
+              <Card className="p-6">
+                <h2 className="font-head text-2xl font-bold">Notes</h2>
                 <ul className="mt-2 flex flex-col gap-2">
                   {generalNotes.map((n) => (
-                    <li key={n.id} className="text-[#4a4a4a]">
+                    <li key={n.id} className="text-muted-foreground">
                       ✏️ {n.body}
                     </li>
                   ))}

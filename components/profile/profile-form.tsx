@@ -5,27 +5,28 @@ import { useRouter } from "next/navigation";
 import { Cropper, type ReactCropperElement } from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import Resizer from "react-image-file-resizer";
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  Input,
-  Modal,
-  ToastContainer,
-  useToast,
-} from "sketchbook-ui";
+import { toast } from "sonner";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
-import { greenBadge } from "@/lib/site-content";
 import {
   avatarUploadTargetAction,
   updateProfileAction,
 } from "@/app/profile/actions";
 import type { ProfileDTO } from "@/data/profile";
 import type { PlanUsage } from "@/data/subscriptions";
-
-const mutedBadge = { bg: "#f0ede6", text: "#7a7a7a", stroke: "#c9c4b8" };
 
 function fmtDate(d: Date): string {
   return format(new Date(d), "MMM d, yyyy");
@@ -67,7 +68,6 @@ export function ProfileForm({
   plan: PlanUsage | null;
 }) {
   const router = useRouter();
-  const { toasts, showToast, dismissToast } = useToast();
 
   const [name, setName] = useState(profile.name ?? "");
   const [username, setUsername] = useState(profile.username ?? "");
@@ -120,9 +120,9 @@ export function ProfileForm({
       const url = await uploadAvatar(resized);
       setImage(url);
       setCropOpen(false);
-      showToast("Photo ready — hit Save to apply it ✎", "success");
+      toast.success("Photo ready — hit Save to apply it ✎");
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Upload failed.", "error");
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploading(false);
     }
@@ -133,31 +133,31 @@ export function ProfileForm({
     const res = await updateProfileAction({ name, username, image });
     setSaving(false);
     if (res.success) {
-      showToast("Profile updated ✎", "success");
+      toast.success("Profile updated ✎");
       router.refresh();
     } else {
-      showToast(res.error, "error");
+      toast.error(res.error);
     }
   }
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <div className="mb-6">
-        <h1 className="font-hand text-4xl font-bold sm:text-5xl">
+        <h1 className="font-head text-4xl font-bold sm:text-5xl">
           Your profile
         </h1>
-        <p className="mt-1 text-[#5a5a5a]">
+        <p className="mt-1 text-muted-foreground">
           Update how you show up on Wanderly.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Avatar card */}
-        <Card variant="paper" className="lg:col-span-1">
-          <h2 className="font-hand text-2xl font-bold">Avatar</h2>
+        <Card className="p-6 lg:col-span-1">
+          <h2 className="font-head text-2xl font-bold">Avatar</h2>
           <div className="mt-4 flex flex-col items-center gap-4">
             <AvatarUpload value={image} onFileSelected={onAvatarFile} />
-            <p className="font-hand text-lg">or pick a look</p>
+            <p className="font-head text-lg">or pick a look</p>
             <div className="flex flex-wrap justify-center gap-3">
               {PEEP_SEEDS.map((seed) => {
                 const url = peep(seed);
@@ -168,11 +168,14 @@ export function ProfileForm({
                     type="button"
                     onClick={() => setImage(url)}
                     className={`rounded-full transition-transform hover:-translate-y-0.5 ${
-                      selected ? "ring-2 ring-[#2f7d7a] ring-offset-2" : ""
+                      selected ? "ring-2 ring-primary ring-offset-2" : ""
                     }`}
                     aria-label={`Avatar ${seed}`}
                   >
-                    <Avatar src={url} size="sm" />
+                    <Avatar className="size-12">
+                      <AvatarImage src={url} alt="" />
+                      <AvatarFallback>{seed[0]}</AvatarFallback>
+                    </Avatar>
                   </button>
                 );
               })}
@@ -181,46 +184,50 @@ export function ProfileForm({
         </Card>
 
         {/* Account details card */}
-        <Card variant="paper" className="lg:col-span-2">
-          <h2 className="font-hand text-2xl font-bold">Account details</h2>
+        <Card className="p-6 lg:col-span-2">
+          <h2 className="font-head text-2xl font-bold">Account details</h2>
           <div className="mt-4 flex flex-col gap-5">
-            <Input
-              label="Display name"
-              placeholder="How your name appears"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Input
-              label="Username"
-              placeholder="a unique handle"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+            <div className="grid gap-2">
+              <Label htmlFor="display-name">Display name</Label>
+              <Input
+                id="display-name"
+                placeholder="How your name appears"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                placeholder="a unique handle"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
             <div>
-              <Input label="Email" value={profile.email} disabled readOnly />
-              <p className="mt-1 text-xs text-[#9a9a9a]">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" value={profile.email} disabled readOnly />
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Your email is tied to your account and can&apos;t be changed.
               </p>
             </div>
-            <div className="flex flex-col gap-2 rounded-xl border border-black/10 bg-white/60 p-3 text-sm">
+            <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[#5a5a5a]">Plan</span>
-                <Badge size="sm" colors={greenBadge}>
-                  {plan?.planName ?? "Free"}
-                </Badge>
+                <span className="text-muted-foreground">Plan</span>
+                <Badge>{plan?.planName ?? "Free"}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5a5a5a]">Email verified</span>
-                <Badge
-                  size="sm"
-                  colors={profile.emailVerified ? greenBadge : mutedBadge}
-                >
+                <span className="text-muted-foreground">Email verified</span>
+                <Badge variant={profile.emailVerified ? "default" : "outline"}>
                   {profile.emailVerified ? "Verified" : "Unverified"}
                 </Badge>
               </div>
               {plan && (
                 <div className="flex items-center justify-between">
-                  <span className="text-[#5a5a5a]">Trips used</span>
+                  <span className="text-muted-foreground">Trips used</span>
                   <span className="font-medium">
                     {plan.tripsUsed}
                     {plan.maxTrips != null ? ` / ${plan.maxTrips}` : ""}
@@ -228,7 +235,7 @@ export function ProfileForm({
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-[#5a5a5a]">Member since</span>
+                <span className="text-muted-foreground">Member since</span>
                 <span className="font-medium">
                   {fmtDate(profile.createdAt)}
                 </span>
@@ -244,42 +251,38 @@ export function ProfileForm({
       </div>
 
       {/* Crop modal */}
-      <Modal
-        isOpen={cropOpen}
-        onClose={() => setCropOpen(false)}
-        title="Crop your photo"
-        variant="paper"
-        footer={
-          <div className="flex justify-end gap-3">
-            <Button size="sm" onClick={() => setCropOpen(false)}>
+      <Dialog open={cropOpen} onOpenChange={setCropOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crop your photo</DialogTitle>
+          </DialogHeader>
+          {cropSrc && (
+            <Cropper
+              src={cropSrc}
+              style={{ height: 300, width: "100%" }}
+              aspectRatio={1}
+              viewMode={1}
+              guides
+              background={false}
+              responsive
+              autoCropArea={1}
+              ref={cropperRef}
+            />
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCropOpen(false)}
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={applyCrop} disabled={uploading}>
               {uploading ? "Uploading…" : "Use photo"}
             </Button>
-          </div>
-        }
-      >
-        {cropSrc && (
-          <Cropper
-            src={cropSrc}
-            style={{ height: 300, width: "100%" }}
-            aspectRatio={1}
-            viewMode={1}
-            guides
-            background={false}
-            responsive
-            autoCropArea={1}
-            ref={cropperRef}
-          />
-        )}
-      </Modal>
-
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={dismissToast}
-        position="bottom-right"
-      />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
