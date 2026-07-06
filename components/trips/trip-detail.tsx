@@ -112,60 +112,60 @@ export function TripDetailView({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main: Roadmap / Map tabs */}
-        <div className="lg:col-span-2">
-          <div className="mb-4 flex gap-2">
-            <Button
-              size="sm"
-              colors={tab === "timeline" ? greenBadge : undefined}
-              onClick={() => setTab("timeline")}
-            >
-              🗓 Roadmap
-            </Button>
-            <Button
-              size="sm"
-              colors={tab === "map" ? greenBadge : undefined}
-              onClick={() => setTab("map")}
-            >
-              🗺 Map
-            </Button>
-            <Button
-              size="sm"
-              colors={tab === "gallery" ? greenBadge : undefined}
-              onClick={() => setTab("gallery")}
-            >
-              📸 Gallery
-            </Button>
-          </div>
-          <Card variant="paper">
-            {tab === "timeline" && (
-              <TripTimeline
-                tripId={trip.id}
-                days={days}
-                itinerary={trip.itinerary}
-                places={trip.places}
-                media={media}
-                notes={trip.notes}
-                canContribute={trip.isMember}
-                canDownload={storage?.allowDownloads ?? false}
-              />
-            )}
-            {tab === "map" && <TripMap points={points} />}
-            {tab === "gallery" && (
-              <TripGallery
-                tripId={trip.id}
-                media={media}
-                days={days}
-                storage={storage}
-                canContribute={trip.isMember}
-              />
-            )}
-          </Card>
-        </div>
+      {/* Tabs */}
+      <div className="mb-4 flex gap-2">
+        <Button
+          size="sm"
+          colors={tab === "timeline" ? greenBadge : undefined}
+          onClick={() => setTab("timeline")}
+        >
+          🗓 Roadmap
+        </Button>
+        <Button
+          size="sm"
+          colors={tab === "map" ? greenBadge : undefined}
+          onClick={() => setTab("map")}
+        >
+          🗺 Map
+        </Button>
+        <Button
+          size="sm"
+          colors={tab === "gallery" ? greenBadge : undefined}
+          onClick={() => setTab("gallery")}
+        >
+          📸 Gallery
+        </Button>
+      </div>
 
-        {/* Sidebar: about, notes */}
-        <div className="flex flex-col gap-6">
+      {/* Tab content — full width */}
+      <Card variant="paper">
+        {tab === "timeline" && (
+          <TripTimeline
+            tripId={trip.id}
+            days={days}
+            itinerary={trip.itinerary}
+            places={trip.places}
+            media={media}
+            notes={trip.notes}
+            canContribute={trip.isMember}
+            canDownload={storage?.allowDownloads ?? false}
+          />
+        )}
+        {tab === "map" && <TripMap points={points} />}
+        {tab === "gallery" && (
+          <TripGallery
+            tripId={trip.id}
+            media={media}
+            days={days}
+            storage={storage}
+            canContribute={trip.isMember}
+          />
+        )}
+      </Card>
+
+      {/* About & Notes — hidden on the gallery tab so it gets the full width */}
+      {tab !== "gallery" && (trip.summary || generalNotes.length > 0) && (
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
           {trip.summary && (
             <Card variant="paper">
               <h2 className="font-hand text-2xl font-bold">About</h2>
@@ -186,7 +186,7 @@ export function TripDetailView({
             </Card>
           )}
         </div>
-      </div>
+      )}
 
       <ShareDialog
         open={shareOpen}
