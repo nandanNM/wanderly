@@ -1,95 +1,123 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import { motion, type Variants } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface PhotoStackCardProps {
+// --- PROPS INTERFACE ---
+// Omit the handlers framer-motion redefines (drag/animation) so spreading
+// plain DOM props (onClick, etc.) onto motion.div doesn't clash.
+interface PhotoStackCardProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart"
+> {
   images: string[];
   category: string;
   title: string;
   subtitle: string;
-  /** Lifts + fans the stack open even without hover (e.g. selected). */
-  isActive?: boolean;
-  className?: string;
+  isActive?: boolean; // Controls the active (lifted) state
 }
 
-// Each photo fans out from the stack; wider spread + lift on hover.
-const photoVariants: Variants = {
-  rest: (i: number) => ({
-    rotate: (i - 1) * 6,
-    x: (i - 1) * 16,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 260, damping: 22 },
-  }),
+// --- FRAMER MOTION VARIANTS ---
+// For the image stack within the card
+const imageContainerVariants: Variants = {
+  initial: {},
+  hover: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const imageVariants: Variants = {
+  initial: { scale: 1, rotate: 0, y: 0 },
   hover: (i: number) => ({
-    rotate: (i - 1) * 12,
-    x: (i - 1) * 52,
-    y: -20,
     scale: 1.05,
+    rotate: (i - 1) * 10,
+    y: -20,
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)",
     transition: { type: "spring", stiffness: 300, damping: 20 },
   }),
 };
 
-export function PhotoStackCard({
-  images,
-  category,
-  title,
-  subtitle,
-  isActive,
-  className,
-}: PhotoStackCardProps) {
-  const shown = images.slice(0, 3);
+// For the card itself (click interaction)
+const cardVariants: Variants = {
+  inactive: {
+    scale: 1,
+    y: 0,
+    zIndex: 0,
+    transition: { type: "spring", stiffness: 300, damping: 20 },
+  },
+  active: {
+    scale: 1.05,
+    y: -15,
+    zIndex: 10,
+    transition: { type: "spring", stiffness: 300, damping: 20 },
+  },
+};
 
-  return (
-    <motion.div
-      initial="rest"
-      animate={isActive ? "hover" : "rest"}
-      whileHover="hover"
-      className={cn(
-        "group relative h-72 w-full rounded-2xl border border-black/10 bg-[#fffdf8] p-6 shadow-[0_10px_30px_rgba(42,42,42,0.12)] transition-shadow hover:shadow-[0_18px_44px_rgba(42,42,42,0.18)]",
-        className,
-      )}
-    >
-      {/* Text */}
-      <div className="relative z-10 max-w-[60%]">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#5a7d2e]">
-          {category}
-        </p>
-        <h2 className="font-hand mt-1 text-4xl font-bold leading-none text-[#2a2a2a]">
-          {title}
-        </h2>
-        <p className="mt-2 text-sm text-[#7a7a7a]">{subtitle}</p>
-      </div>
+export const PhotoStackCard = React.forwardRef<
+  HTMLDivElement,
+  PhotoStackCardProps
+>(
+  (
+    { className, images, category, title, subtitle, isActive, ...props },
+    ref,
+  ) => {
+    const displayImages = images.slice(0, 3);
 
-      {/* Photo stack — hangs off the bottom-right and fans on hover */}
-      <div className="pointer-events-none absolute -bottom-8 right-3 h-44 w-64">
-        {shown.length > 0 ? (
-          shown.map((src, i) => (
-            <motion.div
-              key={`${src}-${i}`}
-              custom={i}
-              variants={photoVariants}
-              style={{ zIndex: i }}
-              className="absolute bottom-0 right-0 h-40 w-56 origin-bottom overflow-hidden rounded-xl border-4 border-white bg-[#eceae3] shadow-[0_8px_20px_rgba(0,0,0,0.22)]"
-            >
-              <Image
-                src={src}
-                alt={`${title} photo ${i + 1}`}
-                fill
-                sizes="224px"
-                className="object-cover"
-              />
-            </motion.div>
-          ))
-        ) : (
-          <div className="absolute bottom-0 right-0 grid h-40 w-56 rotate-3 place-items-center rounded-xl border-4 border-white bg-[#f0ede6] text-3xl shadow-[0_8px_20px_rgba(0,0,0,0.18)]">
-            📷
-          </div>
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(
+          "group relative flex h-72 w-72 cursor-pointer flex-col justify-start rounded-xl bg-white p-6 shadow-xl",
+          "transition-colors duration-300 ease-in-out",
+          className,
         )}
-      </div>
-    </motion.div>
-  );
-}
+        variants={cardVariants}
+        animate={isActive ? "active" : "inactive"}
+        {...props}
+      >
+        {/* Text Content */}
+        <div className="z-10">
+          <p className="text-xs font-semibold uppercase text-neutral-500">
+            {category}
+          </p>
+          <h2 className="mt-1 text-3xl font-bold text-neutral-900">{title}</h2>
+          <p className="mt-1 text-sm text-neutral-500">{subtitle}</p>
+        </div>
+
+        {/* Image Stack */}
+        <motion.div
+          className="absolute bottom-0 right-0 h-48 w-full"
+          variants={imageContainerVariants}
+          initial="initial"
+          whileHover="hover"
+        >
+          <AnimatePresence>
+            {displayImages.length > 0 ? (
+              displayImages.map((src, i) => (
+                <motion.img
+                  key={`${src}-${i}`}
+                  src={src}
+                  alt={`${title} memory image ${i + 1}`}
+                  custom={i}
+                  variants={imageVariants}
+                  className="absolute -bottom-5 right-6 h-40 w-auto origin-bottom rounded-lg border-4 border-white object-cover shadow-lg"
+                  style={{
+                    transform: `rotate(${(i - 1) * 4}deg)`,
+                  }}
+                />
+              ))
+            ) : (
+              <div className="absolute -bottom-5 right-6 grid h-40 w-52 rotate-3 place-items-center rounded-lg border-4 border-white bg-neutral-100 text-3xl shadow-lg">
+                📷
+              </div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    );
+  },
+);
+PhotoStackCard.displayName = "PhotoStackCard";

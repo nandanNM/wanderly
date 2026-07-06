@@ -63,7 +63,7 @@ export function TripsList({
           </p>
         </div>
       ) : (
-        <div className="grid gap-x-8 gap-y-16 pb-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-14 pb-6 sm:justify-start">
           {trips.map((t) => (
             <Link key={t.id} href={`/trips/${t.id}`} className="block">
               <PhotoStackCard
